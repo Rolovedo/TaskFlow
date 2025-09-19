@@ -51,3 +51,24 @@ ALTER TABLE state RENAME COLUMN board_id TO project_id;
 -- 13. Actualizar el índice para que apunte a projects
 DROP INDEX IF EXISTS idx_boards_owner;
 CREATE INDEX idx_projects_owner ON projects(owner_id);
+
+-- 14. Crear la tabla project_members para gestionar los miembros del proyecto
+CREATE TABLE IF NOT EXISTS project_members (
+  id SERIAL PRIMARY KEY,
+  project_id INT REFERENCES projects(id) ON DELETE CASCADE,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  assigned_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (project_id, user_id)
+);
+
+-- 15. Crear índices para optimizar las consultas en project_members
+CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_members_user_id ON project_members(user_id);
+
+-- Elimina la restricción actual
+ALTER TABLE state DROP CONSTRAINT columns_board_id_fkey;
+
+-- Crea la nueva restricción con ON DELETE CASCADE
+ALTER TABLE state
+ADD CONSTRAINT state_project_id_fkey
+FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;

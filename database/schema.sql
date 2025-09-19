@@ -18,7 +18,7 @@ CREATE TABLE users (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Proyectos (antes boards)
+-- Proyectos
 CREATE TABLE projects (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -28,7 +28,16 @@ CREATE TABLE projects (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Estados (antes columns)
+-- Tabla intermedia para miembros de proyectos
+CREATE TABLE project_members (
+  id SERIAL PRIMARY KEY,
+  project_id INT REFERENCES projects(id) ON DELETE CASCADE,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  assigned_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (project_id, user_id)
+);
+
+-- Estados del proyecto
 CREATE TABLE state (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -59,3 +68,5 @@ CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
 CREATE INDEX idx_projects_owner ON projects(owner_id);
 CREATE INDEX idx_tasks_state_id ON tasks(state_id);
+CREATE INDEX idx_project_members_project_id ON project_members(project_id);
+CREATE INDEX idx_project_members_user_id ON project_members(user_id);

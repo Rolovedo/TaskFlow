@@ -32,4 +32,7 @@ app.get("/ping", async (req, res) => {
 const userRoutes = require('./routes/users');
 app.use('/api/users', userRoutes);
 
+const projectRoutes = require('./routes/projects');
+app.use('/api/projects', projectRoutes);
+
 app.listen(4000, () => console.log("Servidor en http://localhost:4000"));
