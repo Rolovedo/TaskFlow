@@ -1,10 +1,19 @@
+-- Tabla de roles
+CREATE TABLE roles (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(50) NOT NULL
+);
+
+-- Insertar roles base
+INSERT INTO roles (id, nombre) VALUES (1, 'admin'), (2, 'developer');
+
 -- Usuarios
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   name VARCHAR(100) NOT NULL,
-  role VARCHAR(20) DEFAULT 'developer' CHECK (role IN ('developer', 'admin')),
+  role_id INT REFERENCES roles(id),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -25,7 +34,8 @@ CREATE TABLE columns (
   name VARCHAR(100) NOT NULL,
   board_id INT REFERENCES boards(id) ON DELETE CASCADE,
   column_order INT NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Tareas
