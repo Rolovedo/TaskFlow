@@ -23,3 +23,31 @@ DROP COLUMN IF EXISTS role;
 
 -- 6. (Opcional) Verifica que el campo role_id esté correctamente poblado
 SELECT id, email, name, role_id FROM users;
+
+-- 7. Renombrar la tabla columns a state
+ALTER TABLE columns RENAME TO state;
+
+-- 8. Renombrar la columna column_id en tasks a state_id
+ALTER TABLE tasks RENAME COLUMN column_id TO state_id;
+
+-- 9. Actualizar la referencia en tasks para que apunte a state
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_status_check;
+
+ALTER TABLE tasks
+ADD CONSTRAINT tasks_status_check CHECK (
+  status IN ('pending', 'in_progress', 'in_revision', 'completed')
+);
+
+-- 10. Actualizar la referencia en tasks para que apunte a state
+DROP INDEX IF EXISTS idx_tasks_column_id;
+CREATE INDEX idx_tasks_state_id ON tasks(state_id);
+
+-- 11. Renombrar la columna board_id en state a project_id
+ALTER TABLE boards RENAME TO projects;
+
+-- 12. Actualizar el índice para que apunte a projects
+ALTER TABLE state RENAME COLUMN board_id TO project_id;
+
+-- 13. Actualizar el índice para que apunte a projects
+DROP INDEX IF EXISTS idx_boards_owner;
+CREATE INDEX idx_projects_owner ON projects(owner_id);
