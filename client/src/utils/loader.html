@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinity Loader Futurista</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at 30% 40%, rgba(29, 78, 216, 0.15), transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15), transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1), transparent 50%),
+                        linear-gradient(135deg, #0a0a23 0%, #1a0033 50%, #000011 100%);
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .loader-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 200px;
+            height: 100px;
+        }
+
+        .infinity-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .glow-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, 
+                rgba(59, 130, 246, 0.1), 
+                rgba(147, 51, 234, 0.2), 
+                rgba(59, 130, 246, 0.1));
+            animation: rotate 8s linear infinite;
+            filter: blur(2px);
+        }
+
+        .loading-text {
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 300;
+            margin-top: 40px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            animation: pulse-text 2s ease-in-out infinite;
+        }
+
+        .infinity-path {
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.6)) 
+                    drop-shadow(0 0 40px rgba(147, 51, 234, 0.4));
+        }
+
+        .primary-stroke {
+            stroke-dasharray: 100, 200;
+            animation: dash-flow 3s linear infinite;
+            stroke-linecap: round;
+        }
+
+        .secondary-stroke {
+            stroke-dasharray: 150, 150;
+            animation: dash-reverse 4s linear infinite;
+            stroke-linecap: round;
+            opacity: 0.7;
+        }
+
+        .accent-stroke {
+            stroke-dasharray: 80, 220;
+            animation: dash-pulse 2.5s ease-in-out infinite;
+            stroke-linecap: round;
+            opacity: 0.5;
+        }
+
+        @keyframes dash-flow {
+            0% { 
+                stroke-dashoffset: 300; 
+            }
+            100% { 
+                stroke-dashoffset: 0; 
+            }
+        }
+
+        @keyframes dash-reverse {
+            0% { 
+                stroke-dashoffset: 0; 
+            }
+            100% { 
+                stroke-dashoffset: -300; 
+            }
+        }
+
+        @keyframes dash-pulse {
+            0%, 100% { 
+                stroke-dashoffset: 300;
+                opacity: 0.3;
+            }
+            50% { 
+                stroke-dashoffset: 150;
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes rotate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes pulse-text {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Partículas flotantes */
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(45deg, #3b82f6, #9333ea);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .particle:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        .particle:nth-child(3) {
+            bottom: 25%;
+            left: 20%;
+            animation: float 7s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) scale(1);
+                opacity: 0.4;
+            }
+            50% { 
+                transform: translateY(-20px) scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .loader-wrapper {
+                width: 160px;
+                height: 80px;
+            }
+            
+            .glow-ring {
+                width: 180px;
+                height: 100px;
+            }
+            
+            .loading-text {
+                font-size: 12px;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Partículas flotantes -->
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        
+        <div class="loader-wrapper">
+            <!-- Anillo de brillo giratorio -->
+            <div class="glow-ring"></div>
+            
+            <!-- Loader infinito -->
+            <svg class="infinity-loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100">
+                <defs>
+                    <!-- Gradiente principal azul-morado -->
+                    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="1"/>
+                        <stop offset="50%" stop-color="#6366f1" stop-opacity="1"/>
+                        <stop offset="100%" stop-color="#9333ea" stop-opacity="1"/>
+                    </linearGradient>
+                    
+                    <!-- Gradiente secundario con transparencia -->
+                    <linearGradient id="secondaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#1e40af" stop-opacity="0.8"/>
+                        <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.8"/>
+                    </linearGradient>
+                    
+                    <!-- Gradiente de acento -->
+                    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.6"/>
+                    </linearGradient>
+                </defs>
+                
+                <!-- Capa de acento (más gruesa, más transparente) -->
+                <path class="infinity-path accent-stroke" 
+                      d="M 40 50 
+                         C 40 20, 80 20, 100 50 
+                         C 120 80, 160 80, 160 50 
+                         C 160 20, 120 20, 100 50 
+                         C 80 80, 40 80, 40 50 Z"
+                      stroke="url(#accentGrad)"
+                      stroke-width="12"
+                      fill="none"
+                      pathLength="300"/>
+                
+                <!-- Capa secundaria -->
+                <path class="infinity-path secondary-stroke" 
+                      d="M 40 50 
+                         C 40 20, 80 20, 100 50 
+                         C 120 80, 160 80, 160 50 
+                         C 160 20, 120 20, 100 50 
+                         C 80 80, 40 80, 40 50 Z"
+                      stroke="url(#secondaryGrad)"
+                      stroke-width="8"
+                      fill="none"
+                      pathLength="300"/>
+                
+                <!-- Capa principal (más delgada, más brillante) -->
+                <path class="infinity-path primary-stroke" 
+                      d="M 40 50 
+                         C 40 20, 80 20, 100 50 
+                         C 120 80, 160 80, 160 50 
+                         C 160 20, 120 20, 100 50 
+                         C 80 80, 40 80, 40 50 Z"
+                      stroke="url(#primaryGrad)"
+                      stroke-width="4"
+                      fill="none"
+                      pathLength="300"/>
+            </svg>
+        </div>
+        
+        <div class="loading-text">Procesando</div>
+    </div>
+</body>
+</html>
