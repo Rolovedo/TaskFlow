@@ -1,47 +1,83 @@
 # TaskFlow
 
-Tablero colaborativo de tareas estilo Kanban desarrollado con React, Node.js y PostgreSQL.
+Sistema de gestión de proyectos colaborativo con interfaz moderna y funcionalidades de administración de usuarios, desarrollado con React, Node.js y PostgreSQL.
 
 ## 📋 Descripción
 
-TaskFlow es una aplicación web que permite gestionar proyectos mediante tableros tipo Kanban. Incluye autenticación de usuarios con roles (administradores y desarrolladores) y funcionalidades CRUD completas para usuarios y tareas.
+TaskFlow es una aplicación web completa para la gestión de proyectos y usuarios. Cuenta con un sistema de autenticación robusto, gestión de roles, interfaz moderna con loaders animados, transiciones suaves entre páginas y un dashboard intuitivo. El proyecto está diseñado para administradores y desarrolladores con diferentes niveles de acceso.
 
-## 🚀 Características
+## 🎨 Características Principales
 
-- **Autenticación**: Login y registro con JWT
-- **Roles de usuario**: Administradores y desarrolladores
-- **CRUD completo**: Usuarios y tareas
-- **Tableros Kanban**: Organización visual de tareas
-- **Base de datos**: PostgreSQL con relaciones
-- **API REST**: Backend con Express.js
-- **Frontend**: React con interfaz moderna
+- ✅ **Autenticación completa**: Login con JWT y manejo de sesiones
+- ✅ **Sistema de roles**: Administradores y desarrolladores con permisos diferenciados
+- ✅ **Interfaz moderna**: Diseño responsive con gradientes y animaciones
+- ✅ **Logo personalizado**: TaskFlow con símbolo de infinito animado
+- ✅ **Loaders elegantes**: Animaciones de carga con CSS puro
+- ✅ **Transiciones suaves**: Navegación fluida entre páginas
+- ✅ **Dashboard interactivo**: Panel de control personalizado por rol
+- ✅ **Gestión de proyectos**: Vista preliminar de proyectos (en desarrollo)
+- ✅ **Manejo de errores**: Feedback visual claro sin recargas de página
+- ✅ **Protección de rutas**: Sistema de autenticación y autorización
 
 ## 🛠️ Tecnologías
 
 ### Backend
-- Node.js
-- Express.js
-- PostgreSQL
-- JWT para autenticación
-- bcrypt para encriptación
-- CORS
+- **Node.js** con Express.js
+- **PostgreSQL** como base de datos
+- **JWT** para autenticación segura
+- **bcrypt** para encriptación de contraseñas
+- **CORS** para comunicación cliente-servidor
 
 ### Frontend
-- React 19
-- React Scripts
-- CSS moderno
+- **React 19** con hooks modernos
+- **React Router DOM** para navegación
+- **Context API** para gestión de estado global
+- **CSS moderno** con animaciones y gradientes
+- **Axios** para peticiones HTTP
+- **Diseño responsive** adaptable a móviles
 
 ### Base de datos
-- PostgreSQL
-- DBeaver para administración
+- **PostgreSQL** con esquema relacional
+- **Tablas estructuradas**: usuarios, proyectos, tareas
+- **DBeaver** recomendado para administración
 
-## 📦 Instalación
+## 🎯 Funcionalidades Detalladas
+
+### 🔐 Sistema de Autenticación
+- Login seguro con validación de credenciales
+- Tokens JWT con expiración automática
+- Logout con confirmación visual
+- Protección contra ataques de fuerza bruta
+- Manejo de errores sin recarga de página
+
+### 👥 Gestión de Usuarios
+- **Administradores**: Acceso completo al sistema
+- **Desarrolladores**: Acceso limitado a sus proyectos
+- Perfiles de usuario personalizados
+- Cambio de roles (solo administradores)
+
+### 🎨 Interfaz de Usuario
+- **Logo animado**: TaskFlow con símbolo de infinito CSS puro
+- **Loaders elegantes**: 3 variantes de animaciones de carga
+- **Gradientes futuristas**: Paleta azul-morado profesional
+- **Transiciones fluidas**: Navegación sin interrupciones
+- **Responsive design**: Optimizado para todos los dispositivos
+
+### 📊 Dashboard
+- Panel personalizado según el rol del usuario
+- Vista rápida de proyectos asignados
+- Navegación intuitiva entre secciones
+- Información del usuario en tiempo real
+
+## 📦 Instalación y Configuración
 
 ### Prerrequisitos
-- Node.js (v16 o superior)
-- PostgreSQL
+```bash
+- Node.js v16 o superior
+- PostgreSQL v12 o superior
 - npm o yarn
-- DBeaver (opcional, para gestión de BD)
+- Git
+```
 
 ### 1. Clonar el repositorio
 ```bash
@@ -49,228 +85,396 @@ git clone https://github.com/Rolovedo/TaskFlow.git
 cd TaskFlow
 ```
 
-### 2. Configurar la base de datos
+### 2. Configuración de la Base de Datos
 
 #### Instalar PostgreSQL
 1. Descargar desde [postgresql.org](https://www.postgresql.org/download/)
-2. Instalar y configurar usuario y contraseña
-3. Crear base de datos:
+2. Instalar y recordar usuario/contraseña
+3. Configurar la base de datos:
 
 ```sql
--- Conectar a PostgreSQL
+-- Conectar a PostgreSQL como superusuario
 psql -U postgres
 
 -- Crear base de datos
 CREATE DATABASE taskflow;
 
--- Usar la base de datos
-\c taskflow
+-- Conectar a la nueva base de datos
+\c taskflow;
 
--- Ejecutar el schema (copiar contenido de database/schema.sql)
+-- Ejecutar el schema completo (copiar desde database/schema.sql)
 ```
 
-#### Ejecutar el schema
+#### Schema de base de datos
 ```sql
--- Copiar y ejecutar todo el contenido del archivo database/schema.sql
--- Esto creará las tablas: users, boards, columns, tasks
+-- Usuarios con roles
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role_id INTEGER DEFAULT 2,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Proyectos
+CREATE TABLE projects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_by INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tareas
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'pending',
+    project_id INTEGER REFERENCES projects(id),
+    assigned_to INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-### 3. Configurar el backend
+### 3. Configuración del Backend
 
 ```bash
-# Navegar a la carpeta server
+# Navegar al directorio del servidor
 cd server
 
 # Instalar dependencias
 npm install
 
-# Crear archivo .env basado en .env.example
+# Crear archivo de configuración
 cp .env.example .env
 ```
 
-#### Configurar variables de entorno (.env)
+#### Variables de entorno (.env)
 ```env
+# Base de datos PostgreSQL
 DB_USER=postgres
-DB_PASS=tu_contraseña_postgres
+DB_PASS=tu_contraseña_postgresql
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=taskflow
-JWT_SECRET=tu_clave_secreta_super_segura
+
+# Seguridad JWT
+JWT_SECRET=tu_clave_jwt_super_segura_de_64_caracteres_minimo
+
+# Puerto del servidor
+PORT=4000
 ```
 
-#### Generar JWT_SECRET
+#### Generar JWT_SECRET seguro
 ```bash
-# Ejecutar este comando para generar una clave segura
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
-### 4. Configurar el frontend
+### 4. Configuración del Frontend
 
 ```bash
-# Navegar a la carpeta client
+# Navegar al directorio del cliente
 cd ../client
 
 # Instalar dependencias
 npm install
+
+# Crear archivo de configuración (opcional)
+echo "REACT_APP_API_URL=http://localhost:4000/api" > .env
 ```
 
-## 🚀 Ejecución
+## 🚀 Ejecutar el Proyecto
 
-### Iniciar el backend
+### Método 1: Ejecución manual
+
+#### Terminal 1 - Backend
 ```bash
 cd server
 npm start
-# Servidor corriendo en: http://localhost:4000
+# ✅ Servidor ejecutándose en http://localhost:4000
 ```
 
-### Iniciar el frontend
+#### Terminal 2 - Frontend
 ```bash
 cd client
 npm start
-# Cliente corriendo en: http://localhost:3000
+# ✅ Cliente ejecutándose en http://localhost:3000
 ```
 
-## 📝 API Endpoints
+### Método 2: Ejecución con desarrollo
+```bash
+# Backend con auto-restart
+cd server
+npm run dev
 
-### Autenticación
-- `POST /api/users/register` - Registrar usuario
-- `POST /api/users/login` - Iniciar sesión
+# Frontend con hot-reload
+cd client
+npm start
+```
 
-### Usuarios
-- `GET /api/users` - Obtener todos los usuarios (solo admin)
-- `GET /api/users/:id` - Obtener usuario por ID
-- `PUT /api/users/:id` - Actualizar usuario
-- `DELETE /api/users/:id` - Eliminar usuario (solo admin)
+## 🧪 Credenciales de Prueba
 
-### Pruebas
-- `GET /ping` - Probar conexión del servidor
+### Crear usuarios de prueba
+Una vez que el servidor esté corriendo, puedes crear usuarios de prueba:
 
-## 🧪 Pruebas con Postman
-
-### 1. Importar colección
-- Importar el archivo `TaskFlow.postman_collection.json`
-- Configurar variable `baseUrl`: `http://localhost:4000`
-
-### 2. Flujo de pruebas
-1. **Probar conexión**: `GET /ping`
-2. **Registrar admin**: `POST /api/users/register`
-3. **Login admin**: `POST /api/users/login`
-4. **Obtener usuarios**: `GET /api/users` (con token)
-5. **CRUD de usuarios**: GET, PUT, DELETE
-
-### 3. Ejemplos de requests
-
-#### Registrar administrador
-```json
-POST /api/users/register
+```bash
+# POST http://localhost:4000/api/users/register
 {
   "email": "admin@taskflow.com",
   "password": "admin123",
-  "name": "Administrador",
+  "name": "Administrador Sistema",
   "role": "admin"
 }
-```
 
-#### Login
-```json
-POST /api/users/login
 {
-  "email": "admin@taskflow.com",
-  "password": "admin123"
+  "email": "dev@taskflow.com",
+  "password": "dev123",
+  "name": "Desarrollador Frontend",
+  "role": "developer"
 }
 ```
 
-## 📂 Estructura del proyecto
+### Login en la aplicación
+- **Administrador**: admin@taskflow.com / admin123
+- **Desarrollador**: dev@taskflow.com / dev123
+
+## 📚 API Endpoints
+
+### 🔐 Autenticación
+```http
+POST /api/users/register    # Registrar nuevo usuario
+POST /api/users/login       # Iniciar sesión
+```
+
+### 👥 Usuarios (requiere autenticación)
+```http
+GET    /api/users          # Obtener usuarios (solo admin)
+GET    /api/users/:id      # Obtener usuario específico
+PUT    /api/users/:id      # Actualizar usuario
+DELETE /api/users/:id      # Eliminar usuario (solo admin)
+```
+
+### 🔧 Sistema
+```http
+GET /ping                  # Verificar estado del servidor
+```
+
+## 📱 Flujo de Usuario
+
+### Para Administradores
+1. **Login** → Loader "Iniciando Sesión" → Dashboard
+2. **Dashboard**: Vista completa del sistema
+3. **Proyectos**: Gestión total de proyectos
+4. **Usuarios**: CRUD completo de usuarios
+5. **Logout**: Cierre seguro con confirmación
+
+### Para Desarrolladores
+1. **Login** → Loader "Iniciando Sesión" → Dashboard
+2. **Dashboard**: Vista personalizada
+3. **Proyectos**: Solo proyectos asignados
+4. **Perfil**: Edición de datos personales
+5. **Logout**: Cierre seguro
+
+## 🎨 Componentes Principales
+
+### 🔄 Loaders
+- **Infinito animado**: CSS puro sin marcos
+- **Partículas flotantes**: Ambiente futurista
+- **Gradientes dinámicos**: Azul-morado profesional
+- **3 variantes**: Para diferentes contextos
+
+### 🎯 Logo
+- **TaskFlow**: Con símbolo de infinito integrado
+- **Animaciones**: Efecto glow y hover
+- **Tamaños adaptativos**: small, medium, large, xlarge
+- **Variantes de color**: light, dark, gradient
+
+### 🛡️ Protección de Rutas
+```javascript
+// Rutas públicas: /login
+// Rutas protegidas: /dashboard, /projects
+// Redirección automática según autenticación
+```
+
+## 📂 Estructura del Proyecto
 
 ```
 TaskFlow/
-├── client/                 # Frontend React
-│   ├── public/
-│   ├── src/
+├── 📁 client/                    # Frontend React
+│   ├── 📁 public/
+│   │   ├── index.html
+│   │   └── favicon.ico
+│   ├── 📁 src/
+│   │   ├── 📁 components/
+│   │   │   ├── Loader.js         # Loader infinito animado
+│   │   │   ├── Loader.css        # Estilos del loader
+│   │   │   └── ProtectedRoute.js # Protección de rutas
+│   │   ├── 📁 context/
+│   │   │   └── AuthContext.js    # Gestión de autenticación
+│   │   ├── 📁 hooks/
+│   │   │   └── usePageTransition.js # Transiciones suaves
+│   │   ├── 📁 pages/
+│   │   │   ├── Login.js          # Página de login
+│   │   │   ├── Login.css         # Estilos del login
+│   │   │   ├── Dashboard.js      # Dashboard principal
+│   │   │   ├── Dashboard.css     # Estilos del dashboard
+│   │   │   ├── Projects.js       # Gestión de proyectos
+│   │   │   └── Projects.css      # Estilos de proyectos
+│   │   ├── 📁 services/
+│   │   │   └── api.js           # Configuración de Axios
+│   │   ├── App.js               # Componente principal
+│   │   └── index.js             # Punto de entrada
+│   ├── .env                     # Variables de entorno
 │   └── package.json
-├── server/                 # Backend Node.js
-│   ├── routes/
-│   │   └── users.js
-│   ├── .env
-│   ├── .env.example
-│   ├── index.js
+├── 📁 server/                   # Backend Node.js
+│   ├── 📁 routes/
+│   │   └── users.js            # Rutas de usuarios
+│   ├── .env                    # Variables de entorno
+│   ├── .env.example            # Ejemplo de configuración
+│   ├── index.js                # Servidor principal
 │   └── package.json
-├── database/
-│   └── schema.sql         # Esquema de base de datos
+├── 📁 database/
+│   └── schema.sql              # Esquema de PostgreSQL
 ├── .gitignore
 ├── README.md
 └── TaskFlow.postman_collection.json
 ```
 
-## 🔧 Scripts disponibles
+## 🔧 Scripts Disponibles
 
 ### Backend (server/)
 ```bash
-npm start          # Iniciar servidor
-npm run dev        # Iniciar con nodemon
+npm start          # Producción
+npm run dev        # Desarrollo con nodemon
+npm test           # Tests (próximamente)
 ```
 
 ### Frontend (client/)
 ```bash
-npm start          # Iniciar en desarrollo
-npm run build      # Construir para producción
-npm test           # Ejecutar tests
+npm start          # Servidor de desarrollo
+npm run build      # Build de producción
+npm test           # Tests unitarios
+npm run eject      # Exponer configuración
 ```
 
-## 🔐 Seguridad
+## 🔐 Seguridad Implementada
 
-- Contraseñas encriptadas con bcrypt
-- Autenticación JWT con expiración
-- Validación de roles y permisos
-- Variables de entorno para datos sensibles
+- ✅ **Contraseñas encriptadas**: bcrypt con salt
+- ✅ **JWT seguro**: Tokens con expiración
+- ✅ **Validación de entrada**: Sanitización de datos
+- ✅ **CORS configurado**: Comunicación segura
+- ✅ **Variables de entorno**: Datos sensibles protegidos
+- ✅ **Validación de roles**: Permisos por endpoint
+- ✅ **Interceptores HTTP**: Manejo automático de tokens
 
-## 👥 Roles de usuario
+## 🐛 Solución de Problemas Comunes
 
-### Administrador
-- Gestión completa de usuarios
-- Acceso a todos los endpoints
-- Puede cambiar roles de usuarios
+### Error: "no existe la relación users"
+```bash
+# Verificar que PostgreSQL esté corriendo
+sudo service postgresql start
 
-### Desarrollador
-- Acceso limitado
-- Solo puede ver/editar su propio perfil
-- Acceso a funcionalidades de tareas
+# Conectar y verificar la base de datos
+psql -U postgres -d taskflow
+\dt  # Listar tablas
+```
+
+### Error: "Cannot connect to database"
+```bash
+# Verificar variables de entorno
+cat server/.env
+
+# Probar conexión manual
+psql -U postgres -h localhost -p 5432 -d taskflow
+```
+
+### Error: "Port 4000 already in use"
+```bash
+# Encontrar y terminar proceso
+lsof -i :4000
+kill -9 <PID>
+
+# O cambiar puerto en .env
+PORT=4001
+```
+
+### Frontend no carga
+```bash
+# Limpiar cache y reinstalar
+cd client
+rm -rf node_modules package-lock.json
+npm install
+npm start
+```
+
+### Error 401 en login
+```bash
+# Verificar que el servidor esté corriendo
+curl http://localhost:4000/ping
+
+# Verificar credenciales en la base de datos
+psql -U postgres -d taskflow -c "SELECT email, name FROM users;"
+```
+
+## 🚀 Próximas Funcionalidades
+
+- [ ] **Gestión completa de proyectos**: CRUD de proyectos
+- [ ] **Tableros Kanban**: Arrastrar y soltar tareas
+- [ ] **Comentarios**: Sistema de comunicación
+- [ ] **Notificaciones**: Alertas en tiempo real
+- [ ] **Búsqueda avanzada**: Filtros y ordenamiento
+- [ ] **Informes**: Dashboard con métricas
+- [ ] **API completa**: Endpoints de proyectos y tareas
+- [ ] **Tests automatizados**: Jest y Cypress
+- [ ] **Dockerización**: Contenedores para deploy
+- [ ] **CI/CD**: Pipeline automatizado
 
 ## 🤝 Contribución
 
-1. Fork el proyecto
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -m 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abrir Pull Request
+1. Fork el repositorio
+2. Crear rama feature: `git checkout -b feature/nueva-funcionalidad`
+3. Commit cambios: `git commit -m 'Add: nueva funcionalidad'`
+4. Push rama: `git push origin feature/nueva-funcionalidad`
+5. Crear Pull Request
 
-## 📄 Licencia
+### Convención de commits
+```
+feat: nueva funcionalidad
+fix: corrección de bug
+docs: actualización de documentación
+style: cambios de formato
+refactor: refactorización de código
+test: añadir tests
+chore: tareas de mantenimiento
+```
 
-Este proyecto está bajo la Licencia ISC.
+## 👨‍💻 Autor
 
-## 📧 Contacto
+**Samuel Rodriguez**  
+📧 Email: [acevedo314848@gmail.com]  
+🐙 GitHub: [Rolovedo](https://github.com/Rolovedo)  
 
-**Desarrollador**: [Tu nombre]  
-**Email**: [tu-email@dominio.com]  
-**GitHub**: [Rolovedo](https://github.com/Rolovedo)
 
----
+## 📊 Estado del Proyecto
 
-## 🔧 Solución de problemas
+```
+🟢 Completado:
+- ✅ Sistema de autenticación completo
+- ✅ Dashboard funcional
+- ✅ Interfaz moderna con animaciones
+- ✅ Gestión básica de usuarios
+- ✅ Loaders y transiciones
 
-### Error: "no existe la relación users"
-- Verificar que se ejecutó el schema.sql
-- Confirmar conexión a la base de datos correcta
+🟡 En Desarrollo:
+- 🔄 CRUD completo de proyectos
+- 🔄 Sistema de tareas Kanban
+- 🔄 Tests automatizados
 
-### Error 500 en endpoints
-- Verificar variables de entorno
-- Comprobar que PostgreSQL esté corriendo
-- Revisar logs del servidor
-
-### Puerto ocupado
-- Cambiar puerto en variables de entorno
-- Verificar que no haya otros servicios corriendo
-
----
-
-⭐ **¡Dale una estrella al proyecto si te fue útil!** ⭐
+🔴 Planificado:
+- 📋 Notificaciones en tiempo real
+- 📋 Reportes y métricas
+- 📋 Deploy en producción
+```
