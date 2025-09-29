@@ -107,9 +107,30 @@ router.post('/login', async (req, res) => {
 // OBTENER TODOS LOS USUARIOS (solo admin)
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT id, email, name, role_id, created_at, updated_at FROM users ORDER BY created_at DESC'
-    );
+    const result = await db.query(`
+      SELECT 
+        u.id, 
+        u.email, 
+        u.name, 
+        u.role_id, 
+        u.created_at, 
+        u.updated_at,
+        COALESCE(
+          STRING_AGG(DISTINCT p_owned.name, ', '),
+          'ninguno'
+        ) AS proyectos_propietario,
+        COALESCE(
+          STRING_AGG(DISTINCT p_assigned.name, ', '),
+          'ninguno'
+        ) AS proyectos_asignado
+      FROM users u
+      LEFT JOIN projects p_owned ON u.id = p_owned.owner_id
+      LEFT JOIN project_members pm ON u.id = pm.user_id
+      LEFT JOIN projects p_assigned ON pm.project_id = p_assigned.id AND p_assigned.owner_id != u.id
+      GROUP BY u.id, u.email, u.name, u.role_id, u.created_at, u.updated_at
+      ORDER BY u.created_at DESC
+    `);
+    
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -121,17 +142,40 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
+    
     // Solo admin puede ver otros usuarios, usuario puede ver su propio perfil
     if (req.user.role_id !== 1 && req.user.id !== parseInt(id)) {
       return res.status(403).json({ error: 'Acceso denegado' });
     }
-    const result = await db.query(
-      'SELECT id, email, name, role_id, created_at, updated_at FROM users WHERE id = $1',
-      [id]
-    );
+    
+    const result = await db.query(`
+      SELECT 
+        u.id, 
+        u.email, 
+        u.name, 
+        u.role_id, 
+        u.created_at, 
+        u.updated_at,
+        COALESCE(
+          STRING_AGG(DISTINCT p_owned.name, ', '),
+          'ninguno'
+        ) AS proyectos_propietario,
+        COALESCE(
+          STRING_AGG(DISTINCT p_assigned.name, ', '),
+          'ninguno'
+        ) AS proyectos_asignado
+      FROM users u
+      LEFT JOIN projects p_owned ON u.id = p_owned.owner_id
+      LEFT JOIN project_members pm ON u.id = pm.user_id
+      LEFT JOIN projects p_assigned ON pm.project_id = p_assigned.id AND p_assigned.owner_id != u.id
+      WHERE u.id = $1
+      GROUP BY u.id, u.email, u.name, u.role_id, u.created_at, u.updated_at
+    `, [id]);
+    
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
+    
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);

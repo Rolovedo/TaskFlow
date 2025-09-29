@@ -72,3 +72,85 @@ ALTER TABLE state DROP CONSTRAINT columns_board_id_fkey;
 ALTER TABLE state
 ADD CONSTRAINT state_project_id_fkey
 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
+
+-- 16. Agregar columnas de auditoría a la tabla state
+ALTER TABLE state 
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+-- 17. Agregar columna project_id a la tabla tasks
+ALTER TABLE tasks 
+ADD COLUMN IF NOT EXISTS project_id INT;
+
+-- 18. Actualizar la columna project_id en tasks basándose en la relación con state
+UPDATE tasks 
+SET project_id = s.project_id 
+FROM state s 
+WHERE tasks.state_id = s.id;
+
+-- 19. Crear un índice para la columna project_id en tasks
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_project_id_fkey 
+FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
+
+-- 20. Crear un índice para la columna project_id en tasks
+CREATE INDEX idx_tasks_project_id ON tasks(project_id);
+
+-- 21. (Opcional) Verifica que la columna project_id en tasks esté correctamente poblada
+ALTER TABLE state DROP CONSTRAINT IF EXISTS state_project_id_fkey;
+ALTER TABLE state DROP COLUMN IF EXISTS project_id;
+
+-- 22. Eliminar estados duplicados en la tabla state, manteniendo el de menor id
+DELETE FROM state WHERE id NOT IN (
+  SELECT MIN(id) FROM state GROUP BY name
+);
+
+-- 23. Insertar los estados base si no existen
+INSERT INTO state (name, state_order, created_at, updated_at) 
+VALUES 
+  ('pending', 1, NOW(), NOW()),
+  ('in_progress', 2, NOW(), NOW()),
+  ('in_revision', 3, NOW(), NOW()),
+  ('completed', 4, NOW(), NOW())
+ON CONFLICT DO NOTHING;
+
+-- 24. Actualizar la columna state_id en tasks basándose en el estado actual
+UPDATE tasks SET state_id = 1 WHERE status = 'pending';
+UPDATE tasks SET state_id = 2 WHERE status = 'in_progress';
+UPDATE tasks SET state_id = 3 WHERE status = 'in_revision';
+UPDATE tasks SET state_id = 4 WHERE status = 'completed';
+
+-- Eliminar temporalmente las tareas para evitar conflictos de FK
+DELETE FROM tasks;
+
+-- Eliminar todos los estados existentes
+DELETE FROM state;
+
+-- Reiniciar la secuencia para que empiece desde 1
+ALTER SEQUENCE state_id_seq RESTART WITH 1;
+
+-- Insertar los 4 estados globales con IDs específicos
+INSERT INTO state (id, name, state_order, created_at, updated_at) VALUES 
+  (1, 'pending', 1, NOW(), NOW()),
+  (2, 'in_progress', 2, NOW(), NOW()),
+  (3, 'in_revision', 3, NOW(), NOW()),
+  (4, 'completed', 4, NOW(), NOW());
+
+  -- Actualizar la secuencia para que el próximo ID sea 5
+SELECT setval('state_id_seq', 4, true);
+
+-- Eliminar la restricción problemática
+ALTER TABLE tasks DROP CONSTRAINT check_task_status;
+
+-- Actualizar los nombres de los estados para que coincidan con el formato esperado
+UPDATE state 
+SET name = 'in_revision' 
+WHERE name = 'in-revision';
+
+-- Eliminar la restricción actual
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_status_check;
+
+-- Crear la nueva restricción con el nombre correcto
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_status_check 
+CHECK (status IN ('pending', 'in_progress', 'in_revision', 'completed'));

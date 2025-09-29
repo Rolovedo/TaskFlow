@@ -34,7 +34,7 @@ const verifyAdmin = (req, res, next) => {
   next();
 };
 
-// CREAR PROYECTO (solo admin)
+// CREAR PROYECTO (solo admin) - SIN crear estados
 router.post('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { name, description, owner_id } = req.body;
@@ -49,16 +49,8 @@ router.post('/', verifyToken, verifyAdmin, async (req, res) => {
       [name, description, owner_id]
     );
 
-    const projectId = project.rows[0].id;
-
-    // Insertar estados base
-    const states = ['pending', 'in_progress', 'in_revision', 'completed'];
-    for (let i = 0; i < states.length; i++) {
-      await db.query(
-        `INSERT INTO state (name, project_id, state_order) VALUES ($1, $2, $3)`,
-        [states[i], projectId, i + 1]
-      );
-    }
+    // NO crear estados específicos del proyecto
+    // Los estados son globales y ya existen
 
     res.status(201).json({
       message: 'Proyecto creado exitosamente',
@@ -70,15 +62,20 @@ router.post('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-// OBTENER TODOS LOS PROYECTOS
-router.get('/', verifyToken, async (req, res) => {
+// OBTENER ESTADOS GLOBALES (MOVER ANTES DE /:id)
+router.get('/states', verifyToken, async (req, res) => {
   try {
-    const result = await db.query(
-      `SELECT p.id, p.name, p.description, p.owner_id, u.name as owner_name, p.created_at, p.updated_at
-       FROM projects p
-       JOIN users u ON p.owner_id = u.id
-       ORDER BY p.created_at DESC`
-    );
+    const result = await db.query(`
+      SELECT 
+        s.id, 
+        s.name, 
+        s.state_order, 
+        s.created_at, 
+        s.updated_at
+      FROM state s 
+      ORDER BY s.state_order
+    `);
+
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -86,17 +83,60 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// OBTENER PROYECTO POR ID
+// OBTENER TODOS LOS PROYECTOS
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        p.id, 
+        p.name, 
+        p.description, 
+        p.owner_id, 
+        u.name as owner_name, 
+        p.created_at, 
+        p.updated_at,
+        COALESCE(
+          STRING_AGG(DISTINCT um.name, ', '),
+          'ninguno'
+        ) AS usuarios_asignados
+      FROM projects p
+      JOIN users u ON p.owner_id = u.id
+      LEFT JOIN project_members pm ON p.id = pm.project_id
+      LEFT JOIN users um ON pm.user_id = um.id
+      GROUP BY p.id, p.name, p.description, p.owner_id, u.name, p.created_at, p.updated_at
+      ORDER BY p.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// OBTENER PROYECTO POR ID (DESPUÉS del endpoint /states)
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const project = await db.query(
-      `SELECT p.id, p.name, p.description, p.owner_id, u.name as owner_name, p.created_at, p.updated_at
-       FROM projects p
-       JOIN users u ON p.owner_id = u.id
-       WHERE p.id = $1`,
-      [id]
-    );
+    const project = await db.query(`
+      SELECT 
+        p.id, 
+        p.name, 
+        p.description, 
+        p.owner_id, 
+        u.name as owner_name, 
+        p.created_at, 
+        p.updated_at,
+        COALESCE(
+          STRING_AGG(DISTINCT um.name, ', '),
+          'ninguno'
+        ) AS usuarios_asignados
+      FROM projects p
+      JOIN users u ON p.owner_id = u.id
+      LEFT JOIN project_members pm ON p.id = pm.project_id
+      LEFT JOIN users um ON pm.user_id = um.id
+      WHERE p.id = $1
+      GROUP BY p.id, p.name, p.description, p.owner_id, u.name, p.created_at, p.updated_at
+    `, [id]);
 
     if (project.rows.length === 0) {
       return res.status(404).json({ error: 'Proyecto no encontrado' });
