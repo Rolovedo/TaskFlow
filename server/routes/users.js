@@ -104,6 +104,39 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// VERIFICAR SI EMAIL EXISTE (para recuperación de contraseña)
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Validar que el email venga en la petición
+    if (!email) {
+      return res.status(400).json({ error: 'Email es requerido' });
+    }
+    
+    // Buscar el usuario por email
+    const result = await db.query(
+      'SELECT id, email, name FROM users WHERE email = $1',
+      [email]
+    );
+    
+    // Si no existe el usuario
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No existe una cuenta con este correo electrónico' });
+    }
+    
+    // Si existe, devolver éxito (sin revelar información sensible)
+    res.json({
+      success: true,
+      message: 'Email verificado correctamente'
+    });
+    
+  } catch (error) {
+    console.error('Error en verify-email:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // OBTENER TODOS LOS USUARIOS (solo admin)
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {

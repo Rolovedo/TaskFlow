@@ -4,17 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import './Login.css';
 
-const Login = () => {
+const Register = () => {
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [rememberMe, setRememberMe] = useState(false);
-  
-  const { login, loginLoading } = useAuth();
+  const { register, loginLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -35,23 +35,38 @@ const Login = () => {
     if (isSubmitting || loginLoading) {
       return;
     }
+
+    // Validaciones
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
     
     setError('');
     setIsSubmitting(true);
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
       
       if (result.success) {
-        navigate('/dashboard');
+        navigate('/Login');
       } else {
-        setError(result.message || 'Error al iniciar sesión');
+        setError(result.message || 'Error al registrarse');
         setTimeout(() => {
           document.getElementById('email')?.focus();
         }, 100);
       }
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error('Error en registro:', error);
       setError('Error de conexión. Por favor intenta de nuevo.');
     } 
     finally {
@@ -60,7 +75,7 @@ const Login = () => {
   };
 
   if (loginLoading) {
-    return <Loader text="Iniciando Sesión" />;
+    return <Loader text="Creando cuenta" />;
   }
 
   return (
@@ -80,8 +95,8 @@ const Login = () => {
 
           {/* Título */}
           <div className="login-header-new">
-            <h1>Bienvenido de nuevo</h1>
-            <p>Inicia sesión en tu cuenta</p>
+            <h1>Crear cuenta</h1>
+            <p>Regístrate para comenzar</p>
           </div>
 
           {/* Mensaje de error */}
@@ -94,6 +109,26 @@ const Login = () => {
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="login-form-new">
+            {/* Nombre */}
+            <div className="form-field">
+              <label htmlFor="name">Nombre completo</label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Tu nombre"
+                  disabled={isSubmitting || loginLoading}
+                  required
+                />
+                <svg className="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            </div>
+
             {/* Email */}
             <div className="form-field">
               <label htmlFor="email">Correo electrónico</label>
@@ -124,7 +159,7 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="········"
+                  placeholder="Mínimo 6 caracteres"
                   disabled={isSubmitting || loginLoading}
                   required
                 />
@@ -134,31 +169,31 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Remember me y Forgot password */}
-            <div className="form-options">
-              <label className="remember-me">
+            {/* Confirmar Contraseña */}
+            <div className="form-field">
+              <label htmlFor="confirmPassword">Confirmar contraseña</label>
+              <div className="input-wrapper">
                 <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Repite tu contraseña"
+                  disabled={isSubmitting || loginLoading}
+                  required
                 />
-                <span>Recordarme</span>
-              </label>
-              <button
-                type="button"
-                className="forgot-password"
-                onClick={() => navigate('/forgot-password')}  // <- Cambiar aquí
-                style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
+                <svg className="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
             </div>
 
             {/* Botón de submit */}
             <button
               type="submit"
               className="submit-button"
-              disabled={isSubmitting || loginLoading || !formData.email || !formData.password}
+              disabled={isSubmitting || loginLoading || !formData.email || !formData.password || !formData.name || !formData.confirmPassword}
             >
               {isSubmitting || loginLoading ? (
                 <span className="button-loading-state">
@@ -166,7 +201,7 @@ const Login = () => {
                   Procesando...
                 </span>
               ) : (
-                'Iniciar sesión'
+                'Crear cuenta'
               )}
             </button>
           </form>
@@ -174,25 +209,16 @@ const Login = () => {
           {/* Footer */}
           <div className="form-footer">
             <p>
-              ¿No tienes una cuenta?{' '}
+              ¿Ya tienes una cuenta?{' '}
               <button
                 type="button"
                 className="signup-link"
-                onClick={() => navigate('/Register')}
+                onClick={() => navigate('/login')}
                 style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
               >
-                Regístrate
+                Inicia sesión
               </button>
             </p>
-          </div>
-
-          {/* Credenciales de prueba */}
-          <div className="credentials-box">
-            <p className="credentials-title">Credenciales de prueba:</p>
-            <div className="credentials-list">
-              <p><strong>Admin:</strong> admin@taskflow.com | admin123</p>
-              <p><strong>Developer:</strong> dev@taskflow.com | dev123</p>
-            </div>
           </div>
         </div>
       </div>
@@ -200,7 +226,6 @@ const Login = () => {
       {/* Lado derecho - Logo */}
       <div className="login-logo-side">
         <div className="logo-content">
-          {/* Logo principal con animación */}
           <div className="logo-animation">
             <div className="logo-circles">
               <svg width="280" height="280" viewBox="0 0 280 280">
@@ -239,7 +264,6 @@ const Login = () => {
             </svg>
           </div>
 
-          {/* Texto del logo */}
           <div className="logo-text">
             <h1 className="logo-title">TASKFLOOW</h1>
             <div className="logo-subtitle">
@@ -248,7 +272,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Elementos decorativos */}
           <div className="logo-decorations">
             <div className="decoration-bar bar-1"></div>
             <div className="decoration-bar bar-2"></div>
@@ -260,4 +283,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

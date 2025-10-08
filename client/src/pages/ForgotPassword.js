@@ -4,27 +4,23 @@ import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import './Login.css';
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+const ForgotPassword = () => {
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [rememberMe, setRememberMe] = useState(false);
-  
-  const { login, loginLoading } = useAuth();
+  const { forgotPassword, loginLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setEmail(e.target.value);
     
     if (error) {
       setError('');
+    }
+    if (success) {
+      setSuccess('');
     }
   };
 
@@ -37,21 +33,25 @@ const Login = () => {
     }
     
     setError('');
+    setSuccess('');
     setIsSubmitting(true);
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await forgotPassword(email);
       
       if (result.success) {
-        navigate('/dashboard');
+        setSuccess(result.message);
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
       } else {
-        setError(result.message || 'Error al iniciar sesión');
+        setError(result.message || 'Error al procesar la solicitud');
         setTimeout(() => {
           document.getElementById('email')?.focus();
         }, 100);
       }
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error('Error en forgot password:', error);
       setError('Error de conexión. Por favor intenta de nuevo.');
     } 
     finally {
@@ -60,7 +60,7 @@ const Login = () => {
   };
 
   if (loginLoading) {
-    return <Loader text="Iniciando Sesión" />;
+    return <Loader text="Procesando solicitud" />;
   }
 
   return (
@@ -80,8 +80,8 @@ const Login = () => {
 
           {/* Título */}
           <div className="login-header-new">
-            <h1>Bienvenido de nuevo</h1>
-            <p>Inicia sesión en tu cuenta</p>
+            <h1>¿Olvidaste tu contraseña?</h1>
+            <p>Te enviaremos un enlace de recuperación</p>
           </div>
 
           {/* Mensaje de error */}
@@ -89,6 +89,14 @@ const Login = () => {
             <div className="error-message-new">
               <span>⚠️</span>
               <span>{error}</span>
+            </div>
+          )}
+
+          {/* Mensaje de éxito */}
+          {success && (
+            <div className="success-message-new">
+              <span>✅</span>
+              <span>{success}</span>
             </div>
           )}
 
@@ -102,10 +110,10 @@ const Login = () => {
                   type="email"
                   id="email"
                   name="email"
-                  value={formData.email}
+                  value={email}
                   onChange={handleChange}
                   placeholder="tu@email.com"
-                  disabled={isSubmitting || loginLoading}
+                  disabled={isSubmitting || loginLoading || !!success}
                   required
                 />
                 <svg className="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,51 +122,11 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Contraseña */}
-            <div className="form-field">
-              <label htmlFor="password">Contraseña</label>
-              <div className="input-wrapper">
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="········"
-                  disabled={isSubmitting || loginLoading}
-                  required
-                />
-                <svg className="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Remember me y Forgot password */}
-            <div className="form-options">
-              <label className="remember-me">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <span>Recordarme</span>
-              </label>
-              <button
-                type="button"
-                className="forgot-password"
-                onClick={() => navigate('/forgot-password')}  // <- Cambiar aquí
-                style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-
             {/* Botón de submit */}
             <button
               type="submit"
               className="submit-button"
-              disabled={isSubmitting || loginLoading || !formData.email || !formData.password}
+              disabled={isSubmitting || loginLoading || !email || !!success}
             >
               {isSubmitting || loginLoading ? (
                 <span className="button-loading-state">
@@ -166,7 +134,7 @@ const Login = () => {
                   Procesando...
                 </span>
               ) : (
-                'Iniciar sesión'
+                'Enviar enlace de recuperación'
               )}
             </button>
           </form>
@@ -174,25 +142,15 @@ const Login = () => {
           {/* Footer */}
           <div className="form-footer">
             <p>
-              ¿No tienes una cuenta?{' '}
               <button
                 type="button"
                 className="signup-link"
-                onClick={() => navigate('/Register')}
+                onClick={() => navigate('/login')}
                 style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
               >
-                Regístrate
+                ← Volver al inicio de sesión
               </button>
             </p>
-          </div>
-
-          {/* Credenciales de prueba */}
-          <div className="credentials-box">
-            <p className="credentials-title">Credenciales de prueba:</p>
-            <div className="credentials-list">
-              <p><strong>Admin:</strong> admin@taskflow.com | admin123</p>
-              <p><strong>Developer:</strong> dev@taskflow.com | dev123</p>
-            </div>
           </div>
         </div>
       </div>
@@ -200,7 +158,6 @@ const Login = () => {
       {/* Lado derecho - Logo */}
       <div className="login-logo-side">
         <div className="logo-content">
-          {/* Logo principal con animación */}
           <div className="logo-animation">
             <div className="logo-circles">
               <svg width="280" height="280" viewBox="0 0 280 280">
@@ -239,7 +196,6 @@ const Login = () => {
             </svg>
           </div>
 
-          {/* Texto del logo */}
           <div className="logo-text">
             <h1 className="logo-title">TASKFLOOW</h1>
             <div className="logo-subtitle">
@@ -248,7 +204,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Elementos decorativos */}
           <div className="logo-decorations">
             <div className="decoration-bar bar-1"></div>
             <div className="decoration-bar bar-2"></div>
@@ -260,4 +215,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;
