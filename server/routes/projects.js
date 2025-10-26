@@ -8,12 +8,13 @@ const db = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
-  password: process.env.DB_PASS,
+  password: String(process.env.DB_PASSWORD),
   port: process.env.DB_PORT,
 });
 
 // Middleware de autenticación
 const jwt = require('jsonwebtoken');
+
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).json({ error: 'Token requerido' });
@@ -43,15 +44,14 @@ router.post('/', verifyToken, verifyAdmin, async (req, res) => {
     }
 
     const project = await db.query(
-      `INSERT INTO projects (name, description, owner_id) 
-       VALUES ($1, $2, $3) 
+      `INSERT INTO projects (name, description, owner_id)
+       VALUES ($1, $2, $3)
        RETURNING id, name, description, owner_id, created_at, updated_at`,
       [name, description, owner_id]
     );
 
     // NO crear estados específicos del proyecto
     // Los estados son globales y ya existen
-
     res.status(201).json({
       message: 'Proyecto creado exitosamente',
       project: project.rows[0],
@@ -66,16 +66,10 @@ router.post('/', verifyToken, verifyAdmin, async (req, res) => {
 router.get('/states', verifyToken, async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT 
-        s.id, 
-        s.name, 
-        s.state_order, 
-        s.created_at, 
-        s.updated_at
-      FROM state s 
+      SELECT s.id, s.name, s.state_order, s.created_at, s.updated_at
+      FROM state s
       ORDER BY s.state_order
     `);
-
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -87,18 +81,9 @@ router.get('/states', verifyToken, async (req, res) => {
 router.get('/', verifyToken, async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT 
-        p.id, 
-        p.name, 
-        p.description, 
-        p.owner_id, 
-        u.name as owner_name, 
-        p.created_at, 
-        p.updated_at,
-        COALESCE(
-          STRING_AGG(DISTINCT um.name, ', '),
-          'ninguno'
-        ) AS usuarios_asignados
+      SELECT p.id, p.name, p.description, p.owner_id, u.name as owner_name,
+             p.created_at, p.updated_at,
+             COALESCE(STRING_AGG(DISTINCT um.name, ', '), 'ninguno') AS usuarios_asignados
       FROM projects p
       JOIN users u ON p.owner_id = u.id
       LEFT JOIN project_members pm ON p.id = pm.project_id
@@ -117,26 +102,20 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const project = await db.query(`
-      SELECT 
-        p.id, 
-        p.name, 
-        p.description, 
-        p.owner_id, 
-        u.name as owner_name, 
-        p.created_at, 
-        p.updated_at,
-        COALESCE(
-          STRING_AGG(DISTINCT um.name, ', '),
-          'ninguno'
-        ) AS usuarios_asignados
+    const project = await db.query(
+      `
+      SELECT p.id, p.name, p.description, p.owner_id, u.name as owner_name,
+             p.created_at, p.updated_at,
+             COALESCE(STRING_AGG(DISTINCT um.name, ', '), 'ninguno') AS usuarios_asignados
       FROM projects p
       JOIN users u ON p.owner_id = u.id
       LEFT JOIN project_members pm ON p.id = pm.project_id
       LEFT JOIN users um ON pm.user_id = um.id
       WHERE p.id = $1
       GROUP BY p.id, p.name, p.description, p.owner_id, u.name, p.created_at, p.updated_at
-    `, [id]);
+      `,
+      [id]
+    );
 
     if (project.rows.length === 0) {
       return res.status(404).json({ error: 'Proyecto no encontrado' });
@@ -173,7 +152,13 @@ router.put('/:id', verifyToken, verifyAdmin, async (req, res) => {
     updates.push(`updated_at = NOW()`);
     values.push(id);
 
-    const query = `UPDATE projects SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+    const query = `
+      UPDATE projects
+      SET ${updates.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *;
+    `;
+
     const result = await db.query(query, values);
 
     if (result.rows.length === 0) {
@@ -191,7 +176,10 @@ router.put('/:id', verifyToken, verifyAdmin, async (req, res) => {
 router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await db.query(`DELETE FROM projects WHERE id = $1 RETURNING id`, [id]);
+    const result = await db.query(
+      `DELETE FROM projects WHERE id = $1 RETURNING id`,
+      [id]
+    );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Proyecto no encontrado' });
     }
@@ -207,11 +195,12 @@ router.post('/:id/members', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { user_id } = req.body;
-
     if (!user_id) return res.status(400).json({ error: 'user_id requerido' });
 
     await db.query(
-      `INSERT INTO project_members (project_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      `INSERT INTO project_members (project_id, user_id)
+       VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
       [id, user_id]
     );
 
@@ -226,16 +215,13 @@ router.post('/:id/members', verifyToken, verifyAdmin, async (req, res) => {
 router.delete('/:id/members/:user_id', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id, user_id } = req.params;
-
     const result = await db.query(
       `DELETE FROM project_members WHERE project_id = $1 AND user_id = $2 RETURNING id`,
       [id, user_id]
     );
-
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Miembro no encontrado en el proyecto' });
     }
-
     res.json({ message: 'Miembro eliminado del proyecto' });
   } catch (error) {
     console.error(error);
