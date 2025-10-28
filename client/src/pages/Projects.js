@@ -1,11 +1,19 @@
-// 🔹 Reemplaza SOLO tu archivo con este (mantiene todo igual)
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { usePageTransition } from '../hooks/usePageTransition';
-import Loader from '../components/Loader';
+import Loader from '../components/Loader/Loader';
 import { useNavigate } from 'react-router-dom';
-import './Projects.css';
+import {
+  ProjectsHeader,
+  ProjectsActions,
+  ProjectsGrid,
+  EmptyState,
+  CreateProjectModal,
+  EditProjectModal,
+  AssignDevelopersModal
+} from '../components/Projects';
+import '../styles/Projects.css';
 
 const Projects = () => {
   const { user, logout, logoutLoading } = useAuth();
@@ -56,7 +64,7 @@ const Projects = () => {
     fetchProjects();
   }, [fetchProjects]);
 
-  // Crear proyecto
+  // Handlers
   const handleCreateProject = async (e) => {
     e.preventDefault();
     if (!newProject.name) return alert('El nombre del proyecto es obligatorio');
@@ -83,7 +91,6 @@ const Projects = () => {
     }
   };
 
-  // Editar proyecto
   const handleEditProject = async (e) => {
     e.preventDefault();
     if (!editingProject?.name) return alert('El nombre es obligatorio');
@@ -108,7 +115,6 @@ const Projects = () => {
     }
   };
 
-  // Eliminar proyecto
   const handleDeleteProject = async (id) => {
     if (!window.confirm('¿Seguro que deseas eliminar este proyecto?')) return;
     try {
@@ -122,7 +128,6 @@ const Projects = () => {
     }
   };
 
-  // ✅ Asignar desarrolladores (versión corregida que sí funciona con tu backend)
   const handleAssignDevelopers = async (e) => {
     e.preventDefault();
     if (!assigningProject || selectedDevs.length === 0) {
@@ -131,7 +136,6 @@ const Projects = () => {
     }
 
     try {
-      // Se envía uno por uno según tu API: /projects/:id/members
       await Promise.all(
         selectedDevs.map((userId) =>
           axios.post(
@@ -161,6 +165,11 @@ const Projects = () => {
     await transitionTo('/dashboard', 1200);
   };
 
+  const handleAssignDevelopersOpen = (project) => {
+    setAssigningProject(project);
+    fetchDevelopers();
+  };
+
   const sortedProjects = [...projects].sort((a, b) => {
     if (sortOrder === 'az') return a.name.localeCompare(b.name);
     return new Date(b.created_at) - new Date(a.created_at);
@@ -171,31 +180,12 @@ const Projects = () => {
 
   return (
     <div className="projects-container">
-      <header className="projects-header">
-        <div className="header-content">
-          <div className="header-left">
-            <button onClick={handleBackToDashboard} className="back-button">
-              ← Volver
-            </button>
-            <h1>Mis Proyectos</h1>
-          </div>
-          <div className="user-menu">
-            <span className="welcome-text">{user?.name || 'Usuario'}</span>
-            <button 
-              className="profile-icon-btn"
-              onClick={() => navigate('/perfil')}
-              title="Ver mi perfil"
-            >
-              <div className="profile-avatar-small">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
-              </div>
-            </button>
-            <button onClick={handleLogout} className="logout-button" disabled={logoutLoading}>
-              Cerrar Sesión
-            </button>
-          </div>
-        </div>
-      </header>
+      <ProjectsHeader
+        user={user}
+        onLogout={handleLogout}
+        onBackToDashboard={handleBackToDashboard}
+        logoutLoading={logoutLoading}
+      />
 
       <main className="projects-main">
         <div className="projects-content">
@@ -208,220 +198,59 @@ const Projects = () => {
             </p>
           </div>
 
-          <div className="projects-actions">
-            {user?.role_id === 1 && (
-              <button className="create-project-btn" onClick={() => setShowModal(true)}>
-                ➕ Nuevo Proyecto
-              </button>
-            )}
-            <div className="projects-sort">
-              <button
-                className={`sort-btn ${sortOrder === 'recent' ? 'active' : ''}`}
-                onClick={() => setSortOrder('recent')}
-              >
-                📅 Más recientes
-              </button>
-              <button
-                className={`sort-btn ${sortOrder === 'az' ? 'active' : ''}`}
-                onClick={() => setSortOrder('az')}
-              >
-                🔤 De A-Z
-              </button>
-            </div>
-          </div>
+          <ProjectsActions
+            user={user}
+            sortOrder={sortOrder}
+            onCreateProject={() => setShowModal(true)}
+            onSortChange={setSortOrder}
+          />
 
           {loadingProjects ? (
             <Loader text="Cargando proyectos..." />
           ) : sortedProjects.length === 0 ? (
-            <div className="projects-placeholder">
-              <div className="empty-state">
-                <div className="empty-icon">📂</div>
-                <h3>No hay proyectos disponibles</h3>
-                <p>
-                  {user?.role_id === 1
-                    ? 'Crea tu primer proyecto para comenzar.'
-                    : 'Aún no tienes proyectos asignados.'}
-                </p>
-                {user?.role_id === 1 && (
-                  <button
-                    className="create-first-project-btn"
-                    onClick={() => setShowModal(true)}
-                  >
-                    Crear Proyecto
-                  </button>
-                )}
-              </div>
-            </div>
+            <EmptyState
+              user={user}
+              onCreateProject={() => setShowModal(true)}
+            />
           ) : (
-            <div className="projects-grid">
-              {sortedProjects.map((project) => (
-                <div key={project.id} className="project-card fancy-card">
-                  <div className="card-header">
-                    <h3>{project.name}</h3>
-                  </div>
-                  <p className="card-desc">{project.description || 'Sin descripción'}</p>
-
-                 <div className="project-developers">
-  <strong>Desarrolladores:</strong>{' '}
-  {project.usuarios_asignados && project.usuarios_asignados.trim() !== '' ? (
-    <span>{project.usuarios_asignados}</span>
-  ) : (
-    <span>Sin asignar</span>
-  )}
-</div>
-
-
-                  <small>📆 {new Date(project.created_at).toLocaleDateString()}</small>
-
-                  {user?.role_id === 1 && (
-                    <div className="card-actions">
-                      <button
-                        className="edit-btn"
-                        onClick={() => setEditingProject(project)}
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        className="delete-btn"
-                        onClick={() => handleDeleteProject(project.id)}
-                      >
-                        🗑️ Eliminar
-                      </button>
-                      <button
-                        className="assign-btn"
-                        onClick={() => {
-                          setAssigningProject(project);
-                          fetchDevelopers();
-                        }}
-                      >
-                        👥 Asignar developer
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <ProjectsGrid
+              projects={sortedProjects}
+              user={user}
+              onEditProject={setEditingProject}
+              onDeleteProject={handleDeleteProject}
+              onAssignDevelopers={handleAssignDevelopersOpen}
+            />
           )}
         </div>
       </main>
 
-      {/* === Modales (crear, editar, asignar) iguales que antes === */}
+      {/* Modales */}
+      <CreateProjectModal
+        show={showModal}
+        newProject={newProject}
+        saving={saving}
+        onSubmit={handleCreateProject}
+        onChange={setNewProject}
+        onClose={() => setShowModal(false)}
+      />
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>📝 Crear Nuevo Proyecto</h2>
-            <form onSubmit={handleCreateProject} className="modal-form">
-              <label>Nombre</label>
-              <input
-                type="text"
-                value={newProject.name}
-                onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                required
-              />
-              <label>Descripción</label>
-              <textarea
-                value={newProject.description}
-                onChange={(e) =>
-                  setNewProject({ ...newProject, description: e.target.value })
-                }
-              />
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="save-btn" disabled={saving}>
-                  {saving ? 'Guardando...' : 'Crear Proyecto'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <EditProjectModal
+        project={editingProject}
+        saving={saving}
+        onSubmit={handleEditProject}
+        onChange={setEditingProject}
+        onClose={() => setEditingProject(null)}
+      />
 
-      {/* Modal editar */}
-      {editingProject && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>✏️ Editar Proyecto</h2>
-            <form onSubmit={handleEditProject} className="modal-form">
-              <label>Nombre</label>
-              <input
-                type="text"
-                value={editingProject.name}
-                onChange={(e) =>
-                  setEditingProject({ ...editingProject, name: e.target.value })
-                }
-                required
-              />
-              <label>Descripción</label>
-              <textarea
-                value={editingProject.description}
-                onChange={(e) =>
-                  setEditingProject({ ...editingProject, description: e.target.value })
-                }
-              />
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setEditingProject(null)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="save-btn" disabled={saving}>
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal asignar desarrolladores */}
-      {assigningProject && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>👥 Asignar Desarrolladores</h2>
-            <form onSubmit={handleAssignDevelopers} className="modal-form">
-              <label>Selecciona los desarrolladores:</label>
-              <div className="dev-list">
-                {developers.map((dev) => (
-                  <label key={dev.id} className="dev-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedDevs.includes(dev.id)}
-                      onChange={(e) => {
-                        if (e.target.checked)
-                          setSelectedDevs([...selectedDevs, dev.id]);
-                        else
-                          setSelectedDevs(selectedDevs.filter((id) => id !== dev.id));
-                      }}
-                    />
-                    {dev.name}
-                  </label>
-                ))}
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setAssigningProject(null)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="save-btn" disabled={saving}>
-                  {saving ? 'Guardando...' : 'Asignar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AssignDevelopersModal
+        project={assigningProject}
+        developers={developers}
+        selectedDevs={selectedDevs}
+        saving={saving}
+        onSubmit={handleAssignDevelopers}
+        onDevChange={setSelectedDevs}
+        onClose={() => setAssigningProject(null)}
+      />
     </div>
   );
 };

@@ -1,0 +1,576 @@
+/* ========================================
+   DASHBOARD CONTAINER & LAYOUT
+   ======================================== */
+.dashboard-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+}
+
+.dashboard-main {
+  min-height: calc(100vh - 80px);
+}
+
+.dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+/* Ajuste: hacer el header un poco más alto */
+.dashboard-header {
+  min-height: 96px; /* altura mínima mayor */
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* Aumentar el padding interno del contenido del header */
+.header-content {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+/* Actualizar el cálculo del main para tener en cuenta el nuevo alto del header */
+.dashboard-main {
+  min-height: calc(100vh - 96px);
+}
+
+/* Ajustes responsivos: en móviles el header puede crecer por el reflujo, adaptar el main */
+@media (max-width: 768px) {
+  .dashboard-header {
+    min-height: auto;
+  }
+  .header-content {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  .dashboard-main {
+    min-height: calc(100vh - 120px);
+  }
+}
+/* ========================================
+   HEADER COMPONENT STYLES
+   ======================================== */
+.dashboard-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  min-height: 96px; /* altura mínima mayor */
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 2rem; /* Unificar padding */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-section .dashboard-logo {
+  color: white;
+  font-size: 3rem; /* Mantener el tamaño grande que tienes */
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.welcome-text {
+  color: white !important; 
+  font-weight: 500; 
+  opacity: 1; 
+  font-size: 1rem;
+}
+
+.user-info-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.user-role {
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.profile-icon-btn:hover {
+  transform: scale(1.1);
+}
+
+.profile-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #9333ea 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.logout-button {
+  background: #dc2626;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.logout-button:hover:not(:disabled) {
+  background: #b91c1c; /* Cambiar a un rojo más oscuro en hover */
+  transform: translateY(-1px);
+}
+
+.logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   WELCOME SECTION COMPONENT STYLES
+   ======================================== */
+.welcome-section {
+  background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 20px rgba(102, 126, 234, 0.1);
+}
+
+.welcome-header {
+  margin-bottom: 1.5rem;
+}
+
+.welcome-title {
+  font-size: 2rem;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.user-role-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-email {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.content-header h3 {
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.content-subtitle {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.primary-action-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.primary-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.secondary-action-btn {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.secondary-action-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-icon {
+  font-size: 1.1rem;
+}
+
+/* ========================================
+   STATS CARDS COMPONENT STYLES
+   ======================================== */
+.stats-section {
+  margin-bottom: 2rem;
+}
+
+.stats-title {
+  color: #1e293b;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border-left: 4px solid;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.blue {
+  border-left-color: #3b82f6;
+}
+
+.stat-card.green {
+  border-left-color: #10b981;
+}
+
+.stat-card.orange {
+  border-left-color: #f59e0b;
+}
+
+.stat-card.purple {
+  border-left-color: #8b5cf6;
+}
+
+.stat-icon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.stat-title {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+/* ========================================
+   RECENT ACTIVITY COMPONENT STYLES
+   ======================================== */
+.activity-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.activity-title {
+  color: #1e293b;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.activity-item:hover {
+  background: #f8faff;
+}
+
+.activity-icon {
+  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-message {
+  color: #1e293b;
+  font-size: 0.9rem;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+}
+
+.activity-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.activity-user {
+  font-weight: 500;
+}
+
+.activity-time {
+  opacity: 0.8;
+}
+
+.activity-meta::before {
+  content: '•';
+  margin: 0 0.25rem;
+}
+
+.activity-user + .activity-time::before {
+  display: none;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablets y pantallas medianas */
+@media (max-width: 968px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-content {
+    padding: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+/* Móviles */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .user-menu {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  /* .welcome-text {
+    font-size: 0.9rem;
+  } */
+  
+  .profile-avatar-small {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .dashboard-content {
+    padding: 1rem 0.5rem;
+  }
+  
+  .welcome-section {
+    padding: 1.5rem;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+  
+  .quick-actions {
+    flex-direction: column;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-icon {
+    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .activity-section {
+    padding: 1rem;
+  }
+  
+  .activity-item {
+    padding: 0.5rem;
+  }
+  
+  .activity-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .activity-meta::before {
+    display: none;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .dashboard-logo {
+    font-size: 1.5rem !important;
+  }
+  
+  .user-menu {
+    gap: 0.75rem;
+  }
+  
+  .logout-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .dashboard-content {
+    padding: 0.5rem;
+  }
+  
+  .welcome-title {
+    font-size: 1.3rem;
+  }
+  
+  .welcome-section {
+    padding: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .activity-section {
+    padding: 0.75rem;
+  }
+}

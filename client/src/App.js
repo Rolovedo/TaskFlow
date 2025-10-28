@@ -1,13 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./utils/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import "./App.css";
-import UserProfile from "./pages/UserProfile/UserProfile";
+import UserProfile from "./pages/UserProfile";
 
 function App() {
   return (
