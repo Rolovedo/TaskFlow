@@ -220,7 +220,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, name, role_id } = req.body;
+    const { email, name, role_id, password } = req.body;
     
     // Solo admin puede editar otros usuarios, usuario puede editar su propio perfil
     if (req.user.role_id !== 1 && req.user.id !== parseInt(id)) {
@@ -251,6 +251,14 @@ router.put('/:id', verifyToken, async (req, res) => {
     if (role_id && req.user.role_id === 1) {
       updates.push(`role_id = $${paramCount}`);
       values.push(role_id);
+      paramCount++;
+    }
+
+    // Manejar cambio de contraseña
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updates.push(`password = $${paramCount}`);
+      values.push(hashedPassword);
       paramCount++;
     }
     

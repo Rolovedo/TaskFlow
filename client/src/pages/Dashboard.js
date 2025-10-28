@@ -41,6 +41,15 @@ const Dashboard = () => {
               Bienvenido, {user?.name || 'Usuario'}
             </span>
             <button 
+              className="profile-icon-btn"
+              onClick={() => navigate('/perfil')}
+              title="Ver mi perfil"
+            >
+              <div className="profile-avatar-small">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            </button>
+            <button 
               onClick={handleLogout} 
               className="logout-button"
               disabled={logoutLoading}

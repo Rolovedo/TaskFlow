@@ -7,6 +7,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import "./App.css";
+import UserProfile from "./pages/UserProfile/UserProfile";
 
 function App() {
   return (
@@ -30,6 +31,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Projects />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Perfil"
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
                 </ProtectedRoute>
               }
             />

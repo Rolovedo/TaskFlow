@@ -1,5 +1,5 @@
 // 🔹 Reemplaza SOLO tu archivo con este (mantiene todo igual)
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { usePageTransition } from '../hooks/usePageTransition';
@@ -28,7 +28,7 @@ const Projects = () => {
   const token = localStorage.getItem('token');
   const API_URL = 'http://localhost:4000/api';
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/projects`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -39,7 +39,7 @@ const Projects = () => {
     } finally {
       setLoadingProjects(false);
     }
-  };
+  }, [token]);
 
   const fetchDevelopers = async () => {
     try {
@@ -54,7 +54,7 @@ const Projects = () => {
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [fetchProjects]);
 
   // Crear proyecto
   const handleCreateProject = async (e) => {
@@ -181,6 +181,15 @@ const Projects = () => {
           </div>
           <div className="user-menu">
             <span className="welcome-text">{user?.name || 'Usuario'}</span>
+            <button 
+              className="profile-icon-btn"
+              onClick={() => navigate('/perfil')}
+              title="Ver mi perfil"
+            >
+              <div className="profile-avatar-small">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            </button>
             <button onClick={handleLogout} className="logout-button" disabled={logoutLoading}>
               Cerrar Sesión
             </button>
