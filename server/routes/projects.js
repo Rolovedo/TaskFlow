@@ -229,4 +229,94 @@ router.delete('/:id/members/:user_id', verifyToken, verifyAdmin, async (req, res
   }
 });
 
+// OBTENER ESTADÍSTICAS DEL DASHBOARD
+router.get('/admin/stats', verifyToken, async (req, res) => {
+  try {
+    let stats = {};
+
+    if (req.user.role_id === 1) {
+      // Estadísticas para ADMIN
+      
+      // Total de proyectos
+      const totalProjectsQuery = await db.query('SELECT COUNT(*) as count FROM projects');
+      const totalProjects = parseInt(totalProjectsQuery.rows[0].count) || 0;
+      
+      // Total de usuarios activos (desarrolladores)
+      const activeUsersQuery = await db.query('SELECT COUNT(*) as count FROM users WHERE role_id = 2');
+      const activeUsers = parseInt(activeUsersQuery.rows[0].count) || 0;
+      
+      // Total de tareas pendientes (todos los estados excepto 'Done')
+      const pendingTasksQuery = await db.query(`
+        SELECT COUNT(*) as count FROM tasks t
+        JOIN state s ON t.state_id = s.id
+        WHERE s.name != 'Done'
+      `);
+      const pendingTasks = parseInt(pendingTasksQuery.rows[0].count) || 0;
+      
+      // Tareas completadas hoy
+      const completedTodayQuery = await db.query(`
+        SELECT COUNT(*) as count FROM tasks t
+        JOIN state s ON t.state_id = s.id
+        WHERE s.name = 'Done' 
+        AND DATE(t.updated_at) = CURRENT_DATE
+      `);
+      const completedToday = parseInt(completedTodayQuery.rows[0].count) || 0;
+
+      stats = {
+        totalProjects,
+        activeUsers,
+        pendingTasks,
+        completedToday
+      };
+    } else {
+      // Estadísticas para DESARROLLADOR
+      
+      // Proyectos donde es owner o está asignado
+      const userProjectsQuery = await db.query(`
+        SELECT COUNT(DISTINCT p.id) as count FROM projects p
+        LEFT JOIN project_members pm ON p.id = pm.project_id
+        WHERE p.owner_id = $1 OR pm.user_id = $1
+      `, [req.user.id]);
+      const userProjects = parseInt(userProjectsQuery.rows[0].count) || 0;
+      
+      // Tareas asignadas al usuario
+      const assignedTasksQuery = await db.query(`
+        SELECT COUNT(*) as count FROM tasks WHERE assigned_to = $1
+      `, [req.user.id]);
+      const assignedTasks = parseInt(assignedTasksQuery.rows[0].count) || 0;
+      
+      // Tareas en progreso del usuario
+      const inProgressTasksQuery = await db.query(`
+        SELECT COUNT(*) as count FROM tasks t
+        JOIN state s ON t.state_id = s.id
+        WHERE t.assigned_to = $1 AND s.name = 'In Progress'
+      `, [req.user.id]);
+      const inProgressTasks = parseInt(inProgressTasksQuery.rows[0].count) || 0;
+      
+      // Tareas completadas por el usuario
+      const completedTasksQuery = await db.query(`
+        SELECT COUNT(*) as count FROM tasks t
+        JOIN state s ON t.state_id = s.id
+        WHERE t.assigned_to = $1 AND s.name = 'Done'
+      `, [req.user.id]);
+      const completedTasks = parseInt(completedTasksQuery.rows[0].count) || 0;
+
+      stats = {
+        userProjects,
+        assignedTasks,
+        inProgressTasks,
+        completedTasks
+      };
+    }
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      details: error.message 
+    });
+  }
+});
+
 module.exports = router;

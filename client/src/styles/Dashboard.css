@@ -68,7 +68,10 @@
    HEADER COMPONENT STYLES
    ======================================== */
 .dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: radial-gradient(circle at 30% 40%, rgba(29, 78, 216, 0.15), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15), transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1), transparent 50%),
+            linear-gradient(135deg, #0a0a23 0%, #1a0033 50%, #000011 100%);
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
   position: sticky;
   top: 0;
@@ -201,7 +204,10 @@
 }
 
 .user-role-badge {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+background: radial-gradient(circle at 30% 40%, rgba(29, 78, 216, 0.15), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15), transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1), transparent 50%),
+            linear-gradient(135deg, #0a0a23 0%, #1a0033 50%, #000011 100%);
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -233,7 +239,10 @@
 }
 
 .primary-action-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+background: radial-gradient(circle at 30% 40%, rgba(29, 78, 216, 0.15), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15), transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1), transparent 50%),
+            linear-gradient(135deg, #0a0a23 0%, #1a0033 50%, #000011 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -267,7 +276,10 @@
 }
 
 .secondary-action-btn:hover {
-  background: #667eea;
+  background: radial-gradient(circle at 30% 40%, rgba(29, 78, 216, 0.15), transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15), transparent 50%),
+              radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1), transparent 50%),
+              linear-gradient(135deg, #0a0a23 0%, #1a0033 50%, #000011 100%);
   color: white;
   transform: translateY(-1px);
 }
@@ -572,5 +584,89 @@
   
   .activity-section {
     padding: 0.75rem;
+  }
+}
+
+/* ========================================
+   ESTILOS PARA ESTADOS DE CARGA Y ERROR
+   ======================================== */
+
+/* Estado de carga */
+.stat-card.loading {
+  opacity: 0.7;
+  background: #f3f4f6;
+  color: #6b7280;
+  animation: pulse 1.5s ease-in-out infinite;
+  border-left-color: #d1d5db;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Estado de error */
+.stats-error {
+  text-align: center;
+  padding: 2rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #dc2626;
+}
+
+.error-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.stats-error p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.retry-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.retry-btn:hover {
+  background: #b91c1c;
+}
+
+/* Footer con timestamp */
+.stats-footer {
+  margin-top: 1rem;
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.last-updated {
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Responsive para estados de error */
+@media (max-width: 768px) {
+  .stats-error {
+    padding: 1.5rem;
+  }
+  
+  .error-icon {
+    font-size: 1.5rem;
+  }
+  
+  .retry-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
   }
 }

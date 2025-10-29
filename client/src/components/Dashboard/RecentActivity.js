@@ -1,8 +1,7 @@
 import React from 'react';
-// import '../../styles/RecentActivity.css';
 
 const RecentActivity = ({ user }) => {
-  // Datos simulados - más tarde vendrán de la API
+  //datos simulados
   const activities = user?.role_id === 1 
     ? [
         { 

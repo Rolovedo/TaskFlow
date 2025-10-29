@@ -23,14 +23,21 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [sortOrder, setSortOrder] = useState('recent');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [newProject, setNewProject] = useState({ name: '', description: '' });
+  const [newProject, setNewProject] = useState({ 
+    name: '', 
+    description: '', 
+    owner_id: '' // NUEVO CAMPO
+  });
   const [saving, setSaving] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
 
   // Estado para asignar desarrolladores
   const [assigningProject, setAssigningProject] = useState(null);
   const [developers, setDevelopers] = useState([]);
+  const [assignedDevelopers, setAssignedDevelopers] = useState([]); // NUEVO: desarrolladores asignados
+  const [allUsers, setAllUsers] = useState([]);
   const [selectedDevs, setSelectedDevs] = useState([]);
 
   const token = localStorage.getItem('token');
@@ -60,14 +67,83 @@ const Projects = () => {
     }
   };
 
+  // NUEVA FUNCIÓN: Cargar todos los usuarios
+  const fetchAllUsers = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAllUsers(res.data);
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
+    }
+  }, [token]);
+
+  // NUEVA FUNCIÓN: Obtener desarrolladores asignados a un proyecto
+  const fetchAssignedDevelopers = async (projectId) => {
+    try {
+      const res = await axios.get(`${API_URL}/projects/${projectId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // Extraer desarrolladores del campo usuarios_asignados
+      if (res.data.usuarios_asignados && res.data.usuarios_asignados !== 'ninguno') {
+        const devNames = res.data.usuarios_asignados.split(', ');
+        
+        // Obtener detalles completos de los desarrolladores
+        const allDevsRes = await axios.get(`${API_URL}/users?role=developer`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        const assignedDevs = allDevsRes.data.filter(dev => 
+          devNames.includes(dev.name)
+        );
+        
+        setAssignedDevelopers(assignedDevs);
+      } else {
+        setAssignedDevelopers([]);
+      }
+    } catch (error) {
+      console.error('Error al cargar desarrolladores asignados:', error);
+      setAssignedDevelopers([]);
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+    if (user?.role_id === 1) {
+      fetchAllUsers(); // Solo cargar usuarios si es admin
+    }
+  }, [fetchProjects, fetchAllUsers, user]);
 
-  // Handlers
+  // Función de filtrado por rol (sin cambios)
+  const getFilteredProjectsByRole = (projectsList) => {
+    if (!user) return [];
+    if (user.role_id === 1) {
+      return projectsList;
+    }
+    return projectsList.filter(project => {
+      const isOwner = project.owner_id === user.id;
+      const isAssigned = project.usuarios_asignados && 
+        project.usuarios_asignados.toLowerCase().includes(user.name.toLowerCase());
+      return isOwner || isAssigned;
+    });
+  };
+
+  // ACTUALIZAR: Manejar creación con owner_id
   const handleCreateProject = async (e) => {
     e.preventDefault();
-    if (!newProject.name) return alert('El nombre del proyecto es obligatorio');
+    
+    if (!newProject.name) {
+      alert('El nombre del proyecto es obligatorio');
+      return;
+    }
+    
+    if (!newProject.owner_id) {
+      alert('Debe seleccionar un dueño para el proyecto');
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -76,21 +152,33 @@ const Projects = () => {
         {
           name: newProject.name,
           description: newProject.description,
-          owner_id: user?.id || 1,
+          owner_id: newProject.owner_id, // Usar el owner_id seleccionado
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
       await fetchProjects();
       setShowModal(false);
-      setNewProject({ name: '', description: '' });
+      setNewProject({ name: '', description: '', owner_id: '' }); // Resetear owner_id
+      alert('✅ Proyecto creado exitosamente');
     } catch (error) {
       console.error('Error al crear el proyecto:', error);
-      alert('No se pudo crear el proyecto');
+      alert('❌ No se pudo crear el proyecto');
     } finally {
       setSaving(false);
     }
   };
 
+  // NUEVA FUNCIÓN: Manejar apertura del modal
+  const handleOpenCreateModal = () => {
+    if (user?.role_id === 1) {
+      fetchAllUsers(); // Asegurar que tenemos los usuarios actualizados
+    }
+    setNewProject({ name: '', description: '', owner_id: '' });
+    setShowModal(true);
+  };
+
+  // Handlers existentes (sin cambios)...
   const handleEditProject = async (e) => {
     e.preventDefault();
     if (!editingProject?.name) return alert('El nombre es obligatorio');
@@ -128,6 +216,45 @@ const Projects = () => {
     }
   };
 
+  // NUEVA FUNCIÓN: Remover desarrollador del proyecto
+  const handleRemoveDeveloper = async (userId) => {
+    if (!assigningProject) return;
+    
+    const developer = assignedDevelopers.find(dev => dev.id === userId);
+    const confirmMessage = `¿Estás seguro de que deseas remover a "${developer?.name}" del proyecto "${assigningProject.name}"?`;
+    
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      await axios.delete(
+        `${API_URL}/projects/${assigningProject.id}/members/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert(`✅ ${developer?.name} ha sido removido del proyecto`);
+      
+      // Actualizar listas
+      await fetchAssignedDevelopers(assigningProject.id);
+      await fetchProjects();
+    } catch (error) {
+      console.error('Error al remover desarrollador:', error);
+      alert(`❌ No se pudo remover a ${developer?.name} del proyecto`);
+    }
+  };
+
+  // ACTUALIZAR: Función para abrir modal de asignación
+  const handleAssignDevelopersOpen = async (project) => {
+    setAssigningProject(project);
+    setSelectedDevs([]);
+    
+    // Cargar desarrolladores disponibles y asignados
+    await Promise.all([
+      fetchDevelopers(),
+      fetchAssignedDevelopers(project.id)
+    ]);
+  };
+
+  // ACTUALIZAR: Función para asignar desarrolladores
   const handleAssignDevelopers = async (e) => {
     e.preventDefault();
     if (!assigningProject || selectedDevs.length === 0) {
@@ -146,9 +273,13 @@ const Projects = () => {
         )
       );
 
-      alert('Desarrolladores asignados correctamente ✅');
-      setAssigningProject(null);
+      const count = selectedDevs.length;
+      alert(`✅ ${count} desarrollador${count !== 1 ? 'es' : ''} asignado${count !== 1 ? 's' : ''} correctamente`);
+      
       setSelectedDevs([]);
+      
+      // Actualizar listas
+      await fetchAssignedDevelopers(assigningProject.id);
       await fetchProjects();
     } catch (error) {
       console.error('Error al asignar desarrolladores:', error.response?.data || error.message);
@@ -165,15 +296,16 @@ const Projects = () => {
     await transitionTo('/dashboard', 1200);
   };
 
-  const handleAssignDevelopersOpen = (project) => {
-    setAssigningProject(project);
-    fetchDevelopers();
-  };
-
-  const sortedProjects = [...projects].sort((a, b) => {
-    if (sortOrder === 'az') return a.name.localeCompare(b.name);
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
+  // Lógica de filtrado y ordenamiento (sin cambios)
+  const filteredAndSortedProjects = getFilteredProjectsByRole(projects)
+    .filter(project => 
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (sortOrder === 'az') return a.name.localeCompare(b.name);
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
   if (isTransitioning) return <Loader text="Navegando..." />;
   if (logoutLoading) return <Loader text="Cerrando sesión..." />;
@@ -189,33 +321,28 @@ const Projects = () => {
 
       <main className="projects-main">
         <div className="projects-content">
-          <div className="projects-header-section">
-            <h2>Gestión de Proyectos</h2>
-            <p className="projects-subtitle">
-              {user?.role_id === 1
-                ? 'Administra todos los proyectos del sistema'
-                : 'Visualiza tus proyectos asignados'}
-            </p>
-          </div>
-
           <ProjectsActions
             user={user}
             sortOrder={sortOrder}
-            onCreateProject={() => setShowModal(true)}
+            searchTerm={searchTerm}
+            onCreateProject={handleOpenCreateModal} // CAMBIADO: usar nueva función
             onSortChange={setSortOrder}
+            onSearchChange={setSearchTerm}
           />
 
           {loadingProjects ? (
             <Loader text="Cargando proyectos..." />
-          ) : sortedProjects.length === 0 ? (
+          ) : filteredAndSortedProjects.length === 0 ? (
             <EmptyState
               user={user}
-              onCreateProject={() => setShowModal(true)}
+              onCreateProject={handleOpenCreateModal} // CAMBIADO: usar nueva función
             />
           ) : (
             <ProjectsGrid
-              projects={sortedProjects}
+              projects={filteredAndSortedProjects}
               user={user}
+              sortOrder={sortOrder}
+              searchTerm={searchTerm}
               onEditProject={setEditingProject}
               onDeleteProject={handleDeleteProject}
               onAssignDevelopers={handleAssignDevelopersOpen}
@@ -228,6 +355,7 @@ const Projects = () => {
       <CreateProjectModal
         show={showModal}
         newProject={newProject}
+        users={allUsers} // NUEVA PROP: pasar lista de usuarios
         saving={saving}
         onSubmit={handleCreateProject}
         onChange={setNewProject}
@@ -245,11 +373,17 @@ const Projects = () => {
       <AssignDevelopersModal
         project={assigningProject}
         developers={developers}
+        assignedDevelopers={assignedDevelopers} // NUEVA PROP
         selectedDevs={selectedDevs}
         saving={saving}
         onSubmit={handleAssignDevelopers}
         onDevChange={setSelectedDevs}
-        onClose={() => setAssigningProject(null)}
+        onRemoveDeveloper={handleRemoveDeveloper} // NUEVA PROP
+        onClose={() => {
+          setAssigningProject(null);
+          setSelectedDevs([]);
+          setAssignedDevelopers([]);
+        }}
       />
     </div>
   );

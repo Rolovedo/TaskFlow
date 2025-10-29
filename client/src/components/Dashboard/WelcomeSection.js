@@ -1,5 +1,4 @@
 import React from 'react';
-// import '../../styles/WelcomeSection.css';
 
 const WelcomeSection = ({ user, onNavigateToProjects }) => {
   return (
@@ -30,18 +29,18 @@ const WelcomeSection = ({ user, onNavigateToProjects }) => {
             onClick={onNavigateToProjects}
             className="primary-action-btn"
           >
-            <span className="btn-icon">📊</span>
+            <span className="btn-icon"></span>
             Ver Proyectos
           </button>
           
           {user?.role_id === 1 && (
             <>
               <button className="secondary-action-btn">
-                <span className="btn-icon">👥</span>
+                <span className="btn-icon"></span>
                 Gestionar Usuarios
               </button>
               <button className="secondary-action-btn">
-                <span className="btn-icon">📈</span>
+                <span className="btn-icon"></span>
                 Reportes
               </button>
             </>
