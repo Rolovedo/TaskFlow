@@ -229,6 +229,17 @@ router.delete('/:id/members/:user_id', verifyToken, verifyAdmin, async (req, res
   }
 });
 
+// OBTENER ESTADOS DISPONIBLES
+router.get('/states', verifyToken, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM state ORDER BY state_order ASC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener estados:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // OBTENER ESTADÍSTICAS DEL DASHBOARD
 router.get('/admin/stats', verifyToken, async (req, res) => {
   try {

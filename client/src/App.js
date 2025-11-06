@@ -8,11 +8,12 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import "./App.css";
 import UserProfile from "./pages/UserProfile";
+import Tasks from "./pages/Tasks";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -35,6 +36,14 @@ function App() {
               }
             />
             <Route
+              path="/projects/:projectId/tasks"
+              element={
+                <ProtectedRoute>
+                  <Tasks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/Perfil"
               element={
                 <ProtectedRoute>
@@ -45,8 +54,8 @@ function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

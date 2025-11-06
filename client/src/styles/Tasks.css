@@ -1,0 +1,495 @@
+/* ========================================
+   CONTENEDOR PRINCIPAL DE TAREAS
+   ======================================== */
+.tasks-container {
+  min-height: 100vh;
+  background: radial-gradient(circle at 30% 40%, rgba(29, 78, 216, 0.15), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15), transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1), transparent 50%),
+            linear-gradient(135deg, #0a0a23 0%, #1a0033 50%, #000011 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================
+   HEADER DE TAREAS
+   ======================================== */
+.tasks-header {
+  background: radial-gradient(circle at 30% 40%, rgba(29, 78, 216, 0.15), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15), transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1), transparent 50%),
+            linear-gradient(135deg, #0a0a23 0%, #1a0033 50%, #000011 100%);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  padding: 1rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tasks-header .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.tasks-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.project-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+}
+
+.project-subtitle {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  margin-top: 0.25rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.create-task-btn {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.create-task-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Botón de volver específico para tasks */
+.tasks-back-button {
+  display: block;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  overflow: hidden;
+  outline: none;
+  background-color: transparent;
+  cursor: pointer;
+  border: 0;
+}
+
+.tasks-back-button:before,
+.tasks-back-button:after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  inset: 7px;
+}
+
+.tasks-back-button:before {
+  border: 4px solid #f0eeef;
+  transition: opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1) 80ms,
+    transform 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) 80ms;
+}
+
+.tasks-back-button:after {
+  border: 4px solid #96daf0;
+  transform: scale(1.3);
+  transition: opacity 0.4s cubic-bezier(0.165, 0.84, 0.44, 1),
+    transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 0;
+}
+
+.tasks-back-button:hover:before,
+.tasks-back-button:focus:before {
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+.tasks-back-button:hover:after,
+.tasks-back-button:focus:after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.tasks-button-box {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.tasks-button-elem {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 17px 18px 0 18px;
+  transform: rotate(180deg);
+  fill: #f0eeef;
+}
+
+.tasks-back-button:hover .tasks-button-box,
+.tasks-back-button:focus .tasks-button-box {
+  transition: 0.4s;
+  transform: translateX(-56px);
+}
+
+/* ========================================
+   MAIN CONTENT DE TAREAS
+   ======================================== */
+.tasks-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ========================================
+   TABLERO KANBAN
+   ======================================== */
+.kanban-board {
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.kanban-columns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.kanban-column {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: box-shadow 0.2s;
+}
+
+.kanban-column:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.column-header {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  border-top: 4px solid #3b82f6;
+  border-radius: 12px 12px 0 0;
+  background: #f8fafc;
+}
+
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.state-icon {
+  font-size: 1.2rem;
+}
+
+.state-name {
+  flex: 1;
+  font-size: 1rem;
+}
+
+.task-count {
+  background: #e2e8f0;
+  color: #475569;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.column-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.empty-column {
+  text-align: center;
+  color: #64748b;
+  padding: 2rem 1rem;
+}
+
+.empty-column p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.drop-hint {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ========================================
+   TARJETAS DE TAREAS
+   ======================================== */
+.task-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #e2e8f0;
+}
+
+.task-card.overdue {
+  border-left: 4px solid #ef4444;
+  background: #fef2f2;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.task-priority {
+  display: flex;
+  align-items: center;
+}
+
+.priority-indicator {
+  font-size: 1rem;
+}
+
+.task-actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.task-card:hover .task-actions {
+  opacity: 1;
+}
+
+.task-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.task-action-btn:hover {
+  background: #f1f5f9;
+}
+
+.task-content {
+  margin-bottom: 1rem;
+}
+
+.task-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.task-description {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.task-assignee {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assignee-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.assignee-name {
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.task-due-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.task-due-date.overdue {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.due-icon {
+  font-size: 0.8rem;
+}
+
+/* ========================================
+   MODALES DE TAREAS
+   ======================================== */
+.task-modal {
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.form-row {
+  margin-bottom: 1rem;
+}
+
+.form-row label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-row textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1200px) {
+  .kanban-columns {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .tasks-header {
+    padding: 1rem;
+  }
+  
+  .tasks-header .header-content {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .header-right {
+    justify-content: space-between;
+  }
+  
+  .tasks-main {
+    padding: 1rem;
+  }
+  
+  .kanban-columns {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .kanban-column {
+    min-height: 300px;
+  }
+  
+  .form-row-group {
+    grid-template-columns: 1fr;
+  }
+  
+  .task-modal {
+    max-width: 95vw;
+    margin: 1rem;
+  }
+}
