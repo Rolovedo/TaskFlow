@@ -31,6 +31,8 @@ export const AuthProvider = ({ children }) => {
     setLoginLoading(true);
     
     try {
+      console.log('Attempting login to:', process.env.REACT_APP_API_URL);
+      
       const [response] = await Promise.all([
         api.post('/users/login', { email, password }),
         new Promise(resolve => setTimeout(resolve, 2000))
@@ -44,14 +46,15 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
       let errorMessage = 'Error al iniciar sesión';
       
       if (error.response?.status === 401) {
         errorMessage = 'Credenciales inválidas. Verifica tu email y contraseña.';
       } else if (error.response?.status === 500) {
         errorMessage = 'Error del servidor. Intenta más tarde.';
-      } else if (error.code === 'NETWORK_ERROR' || !error.response) {
-        errorMessage = 'Error de conexión. Verifica tu internet.';
+      } else if (error.code === 'ERR_NETWORK' || !error.response) {
+        errorMessage = 'No se puede conectar al servidor. Verifica tu conexión.';
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       }

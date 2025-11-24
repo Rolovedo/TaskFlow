@@ -3,7 +3,20 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+
+// Configurar CORS para permitir el frontend de Vercel
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'https://task-flow-three-theta.vercel.app',
+    /\.vercel\.app$/ // Permitir todos los subdominios de vercel.app
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Conexión a la base de datos
@@ -13,7 +26,6 @@ const { Pool } = require("pg");
 const dbConfig = process.env.DATABASE_URL 
   ? {
       connectionString: process.env.DATABASE_URL,
-      // No usar SSL con el pooler (puerto 6543)
       ssl: process.env.DATABASE_URL.includes(':6543') ? false : { rejectUnauthorized: false }
     }
   : {
@@ -27,6 +39,20 @@ const dbConfig = process.env.DATABASE_URL
 
 const db = new Pool(dbConfig);
 
+// Ruta raíz
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "TaskFlow API",
+    status: "running",
+    endpoints: {
+      ping: "/ping",
+      users: "/api/users",
+      projects: "/api/projects",
+      tasks: "/api/tasks"
+    }
+  });
+});
+
 // Probar conexión
 app.get("/ping", async (req, res) => {
   try {
@@ -34,7 +60,7 @@ app.get("/ping", async (req, res) => {
     res.json({ ok: true, time: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ ok: false });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -47,4 +73,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 
-app.listen(4000, () => console.log("Servidor en http://localhost:4000"));
+// Manejo de rutas no encontradas
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
+
+module.exports = app;
