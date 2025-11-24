@@ -9,6 +9,7 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',
     'https://task-flow-three-theta.vercel.app',
+    'https://task-flow-gtet.vercel.app',
     /\.vercel\.app$/ // Permitir todos los subdominios de vercel.app
   ],
   credentials: true,
