@@ -8,24 +8,24 @@ app.use(express.json());
 
 // Conexión a la base de datos
 const { Pool } = require("pg");
-console.log("DB_PASSWORD type:", typeof process.env.DB_PASSWORD);
-console.log("DB_PASSWORD value:", process.env.DB_PASSWORD);
-console.log("DB CONFIG:", {
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: String(process.env.DB_PASSWORD),
-  port: process.env.DB_PORT,
-});
 
-const db = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: String(process.env.DB_PASSWORD),
+// Configuración de la conexión
+const dbConfig = process.env.DATABASE_URL 
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      // No usar SSL con el pooler (puerto 6543)
+      ssl: process.env.DATABASE_URL.includes(':6543') ? false : { rejectUnauthorized: false }
+    }
+  : {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      password: String(process.env.DB_PASSWORD),
+      port: parseInt(process.env.DB_PORT),
+      ssl: { rejectUnauthorized: false }
+    };
 
-  port: process.env.DB_PORT,
-});
+const db = new Pool(dbConfig);
 
 // Probar conexión
 app.get("/ping", async (req, res) => {

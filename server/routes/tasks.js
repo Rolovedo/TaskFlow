@@ -3,13 +3,21 @@ const router = express.Router();
 const { Pool } = require('pg');
 
 // Conexión a la base de datos
-const db = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASS,
-  port: process.env.DB_PORT,
-});
+const dbConfig = process.env.DATABASE_URL 
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL.includes(':6543') ? false : { rejectUnauthorized: false }
+    }
+  : {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      password: process.env.DB_PASSWORD,
+      port: process.env.DB_PORT,
+      ssl: { rejectUnauthorized: false }
+    };
+
+const db = new Pool(dbConfig);
 
 // Middleware de autenticación
 const jwt = require('jsonwebtoken');

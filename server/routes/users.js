@@ -5,13 +5,21 @@ const router = express.Router();
 
 // Importar la conexión de base de datos
 const { Pool } = require('pg');
-const db = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: String(process.env.DB_PASS),
-  port: process.env.DB_PORT,
-});
+const dbConfig = process.env.DATABASE_URL 
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL.includes(':6543') ? false : { rejectUnauthorized: false }
+    }
+  : {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      password: String(process.env.DB_PASSWORD),
+      port: process.env.DB_PORT,
+      ssl: { rejectUnauthorized: false }
+    };
+
+const db = new Pool(dbConfig);
 
 // Middleware para verificar token
 const verifyToken = (req, res, next) => {
