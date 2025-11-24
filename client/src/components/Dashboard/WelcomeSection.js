@@ -33,18 +33,6 @@ const WelcomeSection = ({ user, onNavigateToProjects }) => {
             Ver Proyectos
           </button>
           
-          {user?.role_id === 1 && (
-            <>
-              <button className="secondary-action-btn">
-                <span className="btn-icon"></span>
-                Gestionar Usuarios
-              </button>
-              <button className="secondary-action-btn">
-                <span className="btn-icon"></span>
-                Reportes
-              </button>
-            </>
-          )}
         </div>
       </div>
     </div>
