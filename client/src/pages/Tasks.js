@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePageTransition } from '../hooks/usePageTransition';
-import axios from 'axios';
+import api from '../services/api';
 import Loader from '../components/Loader/Loader';
 import {
   TasksHeader,
@@ -34,148 +34,115 @@ const Tasks = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const token = localStorage.getItem('token');
-  const API_URL = 'http://localhost:4000/api';
-
-  // Verificar acceso al proyecto - usando useCallback para evitar re-renders
-  const verifyProjectAccess = useCallback(async () => {
-    try {
-      const projectRes = await axios.get(`${API_URL}/projects/${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setProject(projectRes.data);
-      setHasAccess(true);
-      return projectRes.data; // Retornar los datos del proyecto
-    } catch (error) {
-      console.error('Error verificando acceso al proyecto:', error);
-      if (error.response?.status === 403) {
-        setError('No tienes permisos para acceder a este proyecto');
-      } else if (error.response?.status === 404) {
-        setError('Proyecto no encontrado');
-      } else {
-        setError('Error al cargar el proyecto');
-      }
-      setHasAccess(false);
-      return null;
-    }
-  }, [API_URL, projectId, token]);
-
-  // Cargar datos iniciales
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Primero verificar acceso al proyecto
-        const projectData = await verifyProjectAccess();
-        if (!projectData) {
-          setLoading(false);
-          return;
-        }
-
-        // Cargar tareas (ya verificado el acceso en el endpoint)
-        const tasksRes = await axios.get(`${API_URL}/tasks/project/${projectId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        // Obtener estados globales (estos son los mismos para todos)
-        const statesRes = await axios.get(`${API_URL}/projects/states`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        // Cargar usuarios solo si es admin o owner del proyecto
-        let usersData = [];
-        if (user?.role_id === 1 || projectData.owner_id === user?.id) {
-          try {
-            const usersRes = await axios.get(`${API_URL}/users`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            usersData = usersRes.data;
-          } catch (error) {
-            console.warn('No se pudieron cargar los usuarios:', error);
-            // No es crítico, continúa sin cargar usuarios
-          }
-        }
-
-        setTasks(tasksRes.data);
-        setStates(statesRes.data);
-        setUsers(usersData);
-      } catch (error) {
-        console.error('Error cargando datos:', error);
-        if (error.response?.status === 403) {
-          setError('No tienes permisos para ver las tareas de este proyecto');
-        } else {
-          setError('Error al cargar los datos del proyecto');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (projectId && token && user) {
-      loadData();
-    }
-  }, [projectId, token, user, verifyProjectAccess, API_URL]); // Incluir todas las dependencias
-
-  // Función para recargar tareas
-  const refreshTasks = useCallback(async () => {
-    if (!hasAccess) return;
-    
-    try {
-      const response = await axios.get(`${API_URL}/tasks/project/${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTasks(response.data);
-    } catch (error) {
-      console.error('Error recargando tareas:', error);
-      if (error.response?.status === 403) {
-        setError('Ya no tienes permisos para ver las tareas de este proyecto');
-        setHasAccess(false);
-      }
-    }
-  }, [hasAccess, API_URL, projectId, token]);
-
-  // Verificar permisos para crear/editar tareas
+  // Función para verificar si puede crear/editar tareas
   const canCreateTasks = useCallback(() => {
     if (!user || !project) return false;
     
-    // Admin puede crear siempre
+    // Admin puede crear tareas
     if (user.role_id === 1) return true;
     
-    // Owner del proyecto puede crear
+    // Owner del proyecto puede crear tareas
     if (project.owner_id === user.id) return true;
     
     return false;
   }, [user, project]);
 
-  // Crear nueva tarea
+  // Verificar acceso al proyecto
+  useEffect(() => {
+    const checkProjectAccess = async () => {
+      try {
+        const response = await api.get(`/projects/${projectId}`);
+        setProject(response.data);
+        setHasAccess(true);
+      } catch (error) {
+        console.error('Error verificando acceso al proyecto:', error);
+        setHasAccess(false);
+        setError('No tienes acceso a este proyecto');
+      }
+    };
+
+    if (projectId) {
+      checkProjectAccess();
+    }
+  }, [projectId]);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (!hasAccess) return;
+
+      try {
+        setLoading(true);
+        await Promise.all([
+          fetchTasks(),
+          fetchStates(),
+          fetchDevelopers()
+        ]);
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        setError('Error al cargar los datos del proyecto');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  });
+
+  // Cargar tareas del proyecto
+  const fetchTasks = useCallback(async () => {
+    try {
+      const response = await api.get(`/tasks/project/${projectId}`);
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error cargando tareas:', error);
+      throw error;
+    }
+  }, [projectId]);
+
+  // Cargar estados disponibles
+  const fetchStates = useCallback(async () => {
+    try {
+      const response = await api.get('/projects/states');
+      setStates(response.data);
+    } catch (error) {
+      console.error('Error cargando estados:', error);
+      throw error;
+    }
+  }, []);
+
+  // Cargar desarrolladores
+  const fetchDevelopers = useCallback(async () => {
+    try {
+      const response = await api.get('/users');
+      const devs = response.data.filter(u => u.role_id === 2);
+      setUsers(devs);
+    } catch (error) {
+      console.error('Error cargando desarrolladores:', error);
+      throw error;
+    }
+  }, []);
+
+  // Crear tarea
   const handleCreateTask = async (taskData) => {
-    if (!canCreateTasks()) {
-      alert('❌ No tienes permisos para crear tareas en este proyecto');
+    if (!taskData.title || !taskData.state_id) {
+      alert('Título y estado son requeridos');
       return;
     }
 
     setSaving(true);
     try {
-      await axios.post(`${API_URL}/tasks`, {
+      await api.post('/tasks', {
         ...taskData,
-        project_id: parseInt(projectId)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+        project_id: projectId
       });
       
-      await refreshTasks();
+      await fetchTasks();
       setShowCreateModal(false);
       alert('✅ Tarea creada exitosamente');
     } catch (error) {
       console.error('Error creando tarea:', error);
-      if (error.response?.status === 403) {
-        alert('❌ No tienes permisos para crear tareas en este proyecto');
-      } else {
-        alert('❌ Error al crear la tarea');
-      }
+      alert('❌ Error al crear la tarea');
     } finally {
       setSaving(false);
     }
@@ -185,21 +152,15 @@ const Tasks = () => {
   const handleUpdateTask = async (taskId, taskData) => {
     setSaving(true);
     try {
-      await axios.put(`${API_URL}/tasks/${taskId}`, taskData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.put(`/tasks/${taskId}`, taskData);
       
-      await refreshTasks();
+      await fetchTasks();
       setShowEditModal(false);
       setSelectedTask(null);
       alert('✅ Tarea actualizada exitosamente');
     } catch (error) {
       console.error('Error actualizando tarea:', error);
-      if (error.response?.status === 403) {
-        alert('❌ No tienes permisos para editar esta tarea');
-      } else {
-        alert('❌ Error al actualizar la tarea');
-      }
+      alert('❌ Error al actualizar la tarea');
     } finally {
       setSaving(false);
     }
@@ -210,39 +171,25 @@ const Tasks = () => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return;
     
     try {
-      await axios.delete(`${API_URL}/tasks/${taskId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      await refreshTasks();
+      await api.delete(`/tasks/${taskId}`);
+      await fetchTasks();
       alert('✅ Tarea eliminada exitosamente');
     } catch (error) {
       console.error('Error eliminando tarea:', error);
-      if (error.response?.status === 403) {
-        alert('❌ No tienes permisos para eliminar esta tarea');
-      } else {
-        alert('❌ Error al eliminar la tarea');
-      }
+      alert('❌ Error al eliminar la tarea');
     }
   };
 
-  // Cambiar estado de tarea (drag & drop)
+  // Cambiar estado de tarea
   const handleMoveTask = async (taskId, newStateId) => {
     try {
-      await axios.put(`${API_URL}/tasks/${taskId}`, {
+      await api.put(`/tasks/${taskId}`, {
         state_id: newStateId
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
-      
-      await refreshTasks();
+      await fetchTasks();
     } catch (error) {
       console.error('Error moviendo tarea:', error);
-      if (error.response?.status === 403) {
-        alert('❌ No tienes permisos para mover esta tarea');
-      } else {
-        alert('❌ Error al mover la tarea');
-      }
+      alert('❌ Error al mover la tarea');
     }
   };
 
@@ -271,37 +218,12 @@ const Tasks = () => {
     return <Loader text="Cargando tareas del proyecto..." />;
   }
 
-  if (error) {
+  if (error || !hasAccess) {
     return (
       <div className="error-page">
         <div className="error-content">
-          <h2>❌ Error</h2>
-          <p>{error}</p>
-          <div className="error-actions">
-            <button 
-              className="primary-btn"
-              onClick={handleBackToProjects}
-            >
-              🔙 Volver a Proyectos
-            </button>
-            <button 
-              className="secondary-btn"
-              onClick={() => window.location.reload()}
-            >
-              🔄 Reintentar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="error-page">
-        <div className="error-content">
-          <h2>🔒 Acceso Denegado</h2>
-          <p>No tienes permisos para ver las tareas de este proyecto.</p>
+          <h2>🔒 {error ? 'Error' : 'Acceso Denegado'}</h2>
+          <p>{error || 'No tienes permisos para ver las tareas de este proyecto.'}</p>
           <button 
             className="primary-btn"
             onClick={handleBackToProjects}
@@ -378,10 +300,10 @@ const Tasks = () => {
           setShowDetailsModal(false);
           setSelectedTask(null);
         }}
-        onEdit={canCreateTasks() ? (() => {
+        onEdit={canCreateTasks() ? () => {
           setShowDetailsModal(false);
           setShowEditModal(true);
-        }) : null}
+        } : null}
         canEdit={canCreateTasks()}
       />
     </div>
