@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import {
   ProfileSidebar,
   ProfileMainContent
@@ -29,10 +29,8 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUserProjects = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:4000/api/projects', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Usar api.get en lugar de axios con URL hardcodeada
+        const response = await api.get('/projects');
         
         console.log('Proyectos recibidos:', response.data);
         
@@ -79,12 +77,8 @@ const UserProfile = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `http://localhost:4000/api/users/${user.id}`,
-        { name: newName },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Usar api.put
+      await api.put(`/users/${user.id}`, { name: newName });
 
       // Actualizar el usuario en localStorage
       const updatedUser = { ...user, name: newName };
@@ -138,13 +132,9 @@ const UserProfile = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-
-      await axios.put(
-        `http://localhost:4000/api/users/${user.id}`,
-        { password: newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Usar api.put
+      await api.put(`/users/${user.id}`, { password: newPassword });
+      
       setMessage({ type: 'success', text: 'Contraseña cambiada correctamente' });
       setShowChangePassword(false);
       setNewPassword('');
