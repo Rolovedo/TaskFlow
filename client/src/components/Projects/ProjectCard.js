@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import styled from 'styled-components';
 
 const ProjectCard = ({ 
@@ -15,9 +15,6 @@ const ProjectCard = ({
   const [projectOwner, setProjectOwner] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem('token');
-  const API_URL = 'http://localhost:4000/api';
-
   // Cargar información adicional del proyecto
   useEffect(() => {
     const loadProjectInfo = async () => {
@@ -25,16 +22,12 @@ const ProjectCard = ({
         setLoading(true);
         
         // Cargar conteo de tareas
-        const tasksResponse = await axios.get(`${API_URL}/tasks/project/${project.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const tasksResponse = await api.get(`/tasks/project/${project.id}`);
         setTaskCount(tasksResponse.data.length);
 
         // Solo cargar info del dueño si es admin
         if (user?.role_id === 1) {
-          const ownerResponse = await axios.get(`${API_URL}/users/${project.owner_id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const ownerResponse = await api.get(`/users/${project.owner_id}`);
           setProjectOwner(ownerResponse.data);
         }
       } catch (error) {
@@ -45,10 +38,10 @@ const ProjectCard = ({
       }
     };
 
-    if (project.id && token) {
+    if (project.id) {
       loadProjectInfo();
     }
-  }, [project.id, project.owner_id, user?.role_id, token]);
+  }, [project.id, project.owner_id, user?.role_id]);
 
   const getDevelopersDisplay = () => {
     if (!project.usuarios_asignados || project.usuarios_asignados.trim() === '') {
