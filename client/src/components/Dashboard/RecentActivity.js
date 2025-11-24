@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:4000/api';
+import api from '../../services/api';
 
 // Calcular tiempo relativo
 const getRelativeTime = (date) => {
@@ -240,15 +238,10 @@ const RecentActivity = ({ user }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const headers = { Authorization: `Bearer ${token}` };
-
-        // Obtener proyectos y tareas
+        // Usar api.get para todas las peticiones
         const [projectsRes, tasksRes] = await Promise.all([
-          axios.get(`${API_URL}/projects`, { headers }),
-          axios.get(`${API_URL}/tasks`, { headers })
+          api.get('/projects'),
+          api.get('/tasks')
         ]);
 
         const projects = projectsRes.data;

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
 const StatsCards = ({ user }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = 'http://localhost:4000/api';
+  //const API_URL = 'http://localhost:4000/api';
 
   // Fetch de estadísticas reales
   useEffect(() => {
@@ -23,11 +23,7 @@ const StatsCards = ({ user }) => {
         
         console.log('Fetching stats for user:', user); // Debug
         
-        const response = await axios.get(`${API_URL}/projects/admin/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        console.log('Stats response:', response.data); // Debug
+        const response = await api.get('/projects/admin/stats');
         setStats(response.data);
         
       } catch (error) {
