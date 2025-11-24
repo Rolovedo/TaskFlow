@@ -66,6 +66,41 @@ const Tasks = () => {
     }
   }, [projectId]);
 
+  
+  // Cargar tareas del proyecto
+  const fetchTasks = useCallback(async () => {
+    try {
+      const response = await api.get(`/tasks/project/${projectId}`);
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error cargando tareas:', error);
+      throw error;
+    }
+  }, [projectId]);
+  
+  // Cargar estados disponibles
+  const fetchStates = useCallback(async () => {
+    try {
+      const response = await api.get('/projects/states');
+      setStates(response.data);
+    } catch (error) {
+      console.error('Error cargando estados:', error);
+      throw error;
+    }
+  }, []);
+  
+  // Cargar desarrolladores
+  const fetchDevelopers = useCallback(async () => {
+    try {
+      const response = await api.get('/users');
+      const devs = response.data.filter(u => u.role_id === 2);
+      setUsers(devs);
+    } catch (error) {
+      console.error('Error cargando desarrolladores:', error);
+      throw error;
+    }
+  }, []);
+  
   // Cargar datos iniciales
   useEffect(() => {
     const loadInitialData = async () => {
@@ -87,42 +122,8 @@ const Tasks = () => {
     };
 
     loadInitialData();
-  });
-
-  // Cargar tareas del proyecto
-  const fetchTasks = useCallback(async () => {
-    try {
-      const response = await api.get(`/tasks/project/${projectId}`);
-      setTasks(response.data);
-    } catch (error) {
-      console.error('Error cargando tareas:', error);
-      throw error;
-    }
-  }, [projectId]);
-
-  // Cargar estados disponibles
-  const fetchStates = useCallback(async () => {
-    try {
-      const response = await api.get('/projects/states');
-      setStates(response.data);
-    } catch (error) {
-      console.error('Error cargando estados:', error);
-      throw error;
-    }
-  }, []);
-
-  // Cargar desarrolladores
-  const fetchDevelopers = useCallback(async () => {
-    try {
-      const response = await api.get('/users');
-      const devs = response.data.filter(u => u.role_id === 2);
-      setUsers(devs);
-    } catch (error) {
-      console.error('Error cargando desarrolladores:', error);
-      throw error;
-    }
-  }, []);
-
+  }, [hasAccess, fetchTasks, fetchStates, fetchDevelopers]); // AGREGAR DEPENDENCIAS
+  
   // Crear tarea
   const handleCreateTask = async (taskData) => {
     if (!taskData.title || !taskData.state_id) {
