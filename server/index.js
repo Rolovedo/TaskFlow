@@ -65,6 +65,20 @@ app.get("/ping", async (req, res) => {
   }
 });
 
+// Ruta de bienvenida de la API
+app.get("/api", (req, res) => {
+  res.json({ 
+    message: "TaskFlow API v1.0",
+    status: "running",
+    endpoints: {
+      users: "/api/users",
+      projects: "/api/projects",
+      tasks: "/api/tasks",
+      ping: "/ping"
+    }
+  });
+});
+
 // Rutas
 const userRoutes = require('./routes/users');
 const projectRoutes = require('./routes/projects');
