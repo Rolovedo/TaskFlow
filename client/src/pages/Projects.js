@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { usePageTransition } from '../hooks/usePageTransition';
 import Loader from '../components/Loader/Loader';
@@ -41,11 +41,11 @@ const Projects = () => {
   const [selectedDevs, setSelectedDevs] = useState([]);
 
   const token = localStorage.getItem('token');
-  const API_URL = 'http://localhost:4000/api';
+  //const API_URL = 'http://localhost:4000/api';
 
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/projects`, {
+      const res = await api.get('/projects', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProjects(res.data);
@@ -58,7 +58,7 @@ const Projects = () => {
 
   const fetchDevelopers = async () => {
     try {
-      const res = await axios.get(`${API_URL}/users?role=developer`, {
+      const res = await api.get('/users?role=developer', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDevelopers(res.data);
@@ -70,7 +70,7 @@ const Projects = () => {
   // NUEVA FUNCIÓN: Cargar todos los usuarios
   const fetchAllUsers = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/users`, {
+      const res = await api.get('/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAllUsers(res.data);
@@ -82,7 +82,7 @@ const Projects = () => {
   // NUEVA FUNCIÓN: Obtener desarrolladores asignados a un proyecto
   const fetchAssignedDevelopers = async (projectId) => {
     try {
-      const res = await axios.get(`${API_URL}/projects/${projectId}`, {
+      const res = await api.get(`/projects/${projectId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -91,7 +91,7 @@ const Projects = () => {
         const devNames = res.data.usuarios_asignados.split(', ');
         
         // Obtener detalles completos de los desarrolladores
-        const allDevsRes = await axios.get(`${API_URL}/users?role=developer`, {
+        const allDevsRes = await api.get('/users?role=developer', {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -147,8 +147,8 @@ const Projects = () => {
     setSaving(true);
 
     try {
-      await axios.post(
-        `${API_URL}/projects`,
+      await api.post(
+        '/projects',
         {
           name: newProject.name,
           description: newProject.description,
@@ -185,8 +185,8 @@ const Projects = () => {
     setSaving(true);
 
     try {
-      await axios.put(
-        `${API_URL}/projects/${editingProject.id}`,
+      await api.put(
+        `/projects/${editingProject.id}`,
         {
           name: editingProject.name,
           description: editingProject.description,
@@ -206,7 +206,7 @@ const Projects = () => {
   const handleDeleteProject = async (id) => {
     if (!window.confirm('¿Seguro que deseas eliminar este proyecto?')) return;
     try {
-      await axios.delete(`${API_URL}/projects/${id}`, {
+      await api.delete(`/projects/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       await fetchProjects();
@@ -226,8 +226,8 @@ const Projects = () => {
     if (!window.confirm(confirmMessage)) return;
 
     try {
-      await axios.delete(
-        `${API_URL}/projects/${assigningProject.id}/members/${userId}`,
+      await api.delete(
+        `/projects/${assigningProject.id}/members/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -265,8 +265,8 @@ const Projects = () => {
     try {
       await Promise.all(
         selectedDevs.map((userId) =>
-          axios.post(
-            `${API_URL}/projects/${assigningProject.id}/members`,
+          api.post(
+            `/projects/${assigningProject.id}/members`,
             { user_id: parseInt(userId) },
             { headers: { Authorization: `Bearer ${token}` } }
           )
