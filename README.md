@@ -250,8 +250,8 @@ Este proyecto está bajo la Licencia ISC.
 
 ## 📧 Contacto
 
-**Desarrollador**: [Tu nombre]  
-**Email**: [tu-email@dominio.com]  
+**Desarrollador**: Samuel Acevedo  
+**Email**: acevedo314848@gmail.com  
 **GitHub**: [Rolovedo](https://github.com/Rolovedo)
 
 ---
